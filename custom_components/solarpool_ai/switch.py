@@ -49,6 +49,8 @@ class SolarPoolMasterSwitch(CoordinatorEntity[SolarPoolCoordinator], SwitchEntit
         """Turn the switch on."""
         self.coordinator.enabled = True
         self.async_write_ha_state()
+        # Trigger an immediate cycle check (without forcing bypass of prerequisites)
+        await self.coordinator.async_start_cycle(force=False)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""

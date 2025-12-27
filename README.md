@@ -183,6 +183,7 @@ stateDiagram-v2
 
 | Versión | Cambios principales |
 |---------|---------------------|
+| **0.0.2** | 🛡️ Protección de bomba compartida (no apaga si ya estaba filtrando) y disparo inmediato al activar Master. |
 | **0.0.1** | 🚀 Lanzamiento inicial BETA: Reinforcement Learning Local, Análisis de Ventana, Multilenguaje Regional y UI Optimizada. |
 
 ---

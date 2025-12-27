@@ -110,6 +110,9 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._heating_timer = None  # Timer para apagar la bomba después de heating_duration
         
         # Pump state tracking for intelligent continuation
+        self._pump_started_by_us = False  # Track if WE turned the pump ON
+        
+        # Pump state tracking for intelligent continuation
         self.pump_is_heating = False
         self.heating_start_time: datetime | None = None
         self._last_pump_on_time: datetime | None = None  # Tracking físico total
@@ -526,30 +529,46 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._heating_timer = None
 
     async def _async_control_pump(self, turn_on: bool) -> None:
-        """Control the pool pump."""
+        """Control the pool pump with shared-pump protection."""
         pump_entity = self.entry.data.get(CONF_PUMP_ENTITY_ID)
         
         if not pump_entity:
             _LOGGER.error("Pump entity ID not configured!")
             return
+
+        # Get current physical state of the pump
+        current_state = self.hass.states.get(pump_entity)
+        is_already_on = current_state is not None and current_state.state == STATE_ON
             
-        service = SERVICE_TURN_ON if turn_on else SERVICE_TURN_OFF
-        
-        _LOGGER.info("Controlling pump: %s -> %s", pump_entity, "ON" if turn_on else "OFF")
-        
-        try:
-            await self.hass.services.async_call(
-                "switch", service, {"entity_id": pump_entity}, blocking=True
-            )
-            if turn_on:
-                if not self._last_pump_on_time:
-                    self._last_pump_on_time = utcnow()
+        if turn_on:
+            if is_already_on:
+                _LOGGER.debug("Pump %s is already ON, SolarPool will use it without taking ownership", pump_entity)
+                # If it was already on, we DON'T set _pump_started_by_us = True
+                # unless we were already heating (continuation)
+                if not self.pump_is_heating and not self.state == STATE_SWEEPING:
+                    self._pump_started_by_us = False 
             else:
+                _LOGGER.info("Turning ON pump %s (started by SolarPool)", pump_entity)
+                await self.hass.services.async_call("switch", SERVICE_TURN_ON, {"entity_id": pump_entity}, blocking=True)
+                self._pump_started_by_us = True
+                self._last_pump_on_time = utcnow()
+        else:
+            # Logic for turn OFF
+            if not is_already_on:
+                _LOGGER.debug("Pump %s is already OFF, nothing to do", pump_entity)
+                self._pump_started_by_us = False
                 self._last_pump_on_time = None
-                
-            _LOGGER.info("Pump control successful: %s is now %s", pump_entity, "ON" if turn_on else "OFF")
-        except Exception as err:
-            _LOGGER.error("Failed to control pump %s: %s", pump_entity, err)
+                return
+
+            if self._pump_started_by_us:
+                _LOGGER.info("Turning OFF pump %s (was started by SolarPool)", pump_entity)
+                await self.hass.services.async_call("switch", SERVICE_TURN_OFF, {"entity_id": pump_entity}, blocking=True)
+                self._pump_started_by_us = False
+                self._last_pump_on_time = None
+            else:
+                _LOGGER.info("SolarPool cycle ended but pump %s was not started by us (filtering?). Keeping it ON.", pump_entity)
+                # We reset our tracking just in case
+                self._last_pump_on_time = None
 
     async def stop(self):
         """Stop the coordinator and cleanup."""

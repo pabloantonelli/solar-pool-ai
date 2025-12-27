@@ -71,6 +71,10 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.enabled = True
         self.next_cycle_time: datetime | None = None
         
+        # Daily yield tracking
+        self.t_pool_day_start: float | None = None
+        self.daily_gain: float = 0.0
+        
         # Get interval from config
         self.cycle_interval_minutes = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         
@@ -104,18 +108,19 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         language = entry.options.get(CONF_LANGUAGE, entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE))
         self.explanation_engine = ExplanationEngine(language)
         
-        # Track intervals
+        # Seguimiento de intervalos y temporizadores
         self._unsub_interval = None
         self._sweep_timer = None
         self._heating_timer = None  # Timer para apagar la bomba después de heating_duration
         
-        # Pump state tracking for intelligent continuation
-        self._pump_started_by_us = False  # Track if WE turned the pump ON
+        # Lógica de 'Ownership' (Propiedad) de la bomba
+        # Evita apagar la bomba si ya estaba encendida por otro proceso (ej. filtrado)
+        self._pump_started_by_us = False  # Indica si NOSOTROS encendimos la bomba
         
-        # Pump state tracking for intelligent continuation
+        # Seguimiento del estado de calefacción
         self.pump_is_heating = False
         self.heating_start_time: datetime | None = None
-        self._last_pump_on_time: datetime | None = None  # Tracking físico total
+        self._last_pump_on_time: datetime | None = None  # Tiempo total físico de bomba encendida
         self.heating_duration_minutes = 0
         
         # Daily cycle tracking
@@ -139,10 +144,11 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _async_setup_listeners(self):
-        """Set up periodic updates."""
+        """Configura los oyentes periódicos (el bucle principal)."""
         if self._unsub_interval:
-            self._unsub_interval()
+            self._unsub_interval() # Cancelar si ya existe uno
             
+        # Ejecuta async_start_cycle cada N minutos según configuración
         self._unsub_interval = async_track_time_interval(
             self.hass, self.async_start_cycle, timedelta(minutes=self.cycle_interval_minutes)
         )
@@ -184,21 +190,22 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start_after_ha_ready)
 
     async def async_start_cycle(self, _now: datetime | None = None, force: bool = False) -> None:
-        """Process a single cycle of the pool heating logic."""
+        """Inicia un ciclo completo: Chequeo -> Barrido -> IA -> Calentamiento."""
         if not self.enabled and not force:
-            _LOGGER.debug("SolarPool is disabled, skipping cycle")
+            _LOGGER.debug("SolarPool está deshabilitado, omitiendo ciclo")
             return
 
-        _LOGGER.debug("Starting SolarPool cycle (forced=%s)", force)
+        _LOGGER.debug("Iniciando ciclo SolarPool (forzado=%s)", force)
         
-        # Update next cycle time for the sensor
+        # Calculamos la próxima ejecución para el sensor
         self.next_cycle_time = utcnow() + timedelta(minutes=self.cycle_interval_minutes)
 
-        # 1. Safety & Prerequisite Checks (skip if forced)
+        # 1. Chequeo de requisitos (Sol alto, Temperatura máx, etc.)
         if not force and not await self._async_check_prerequisites():
             return
 
-        # 2. SWEEPING
+        # 2. FASE DE BARRIDO (Sweep)
+        # Si la bomba ya está prendida por nosotros (proceso continuo), saltamos el barrido
         if self.pump_is_heating:
             _LOGGER.info("Bomba ya en funcionamiento, saltando barrido para consulta instantánea")
             await self._async_measure_and_consult()
@@ -207,10 +214,10 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             msg = self.explanation_engine.get_status_message("sweep_forced") if force else self.explanation_engine.get_status_message("sweep_starting")
             await self._async_set_state(STATE_SWEEPING, msg)
             
-            _LOGGER.info("Encendiendo bomba para barrido...")
+            # Encendemos bomba (con protección de ownership)
             await self._async_control_pump(True)
-            _LOGGER.info("Bomba encendida, iniciando monitoreo de estabilidad")
             
+            # Inicializamos limpieza de datos para análisis de estabilidad
             self._sweep_start_time = utcnow()
             self._sweep_readings = []
             self._last_sweep_t_return = None
@@ -219,11 +226,11 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._sweep_timer = async_call_later(self.hass, 30, self._async_check_sweep_stability)
 
     async def _async_check_sweep_stability(self, _now: datetime | None = None) -> None:
-        """Check if return temperature has stabilized or timeout reached."""
+        """Analiza la temperatura de retorno para detectar estabilidad (Análisis de Ventana)."""
         if self.state != STATE_SWEEPING:
             return
 
-        # Obtener configuración de barrido
+        # Duración máxima configurada por el usuario
         max_sweep_duration = self.entry.options.get(
             CONF_SWEEP_DURATION, 
             self.entry.data.get(CONF_SWEEP_DURATION, DEFAULT_SWEEP_DURATION)
@@ -231,7 +238,7 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         
         elapsed = (utcnow() - self._sweep_start_time).total_seconds()
         
-        # Obtener temperatura actual de retorno
+        # Leer sensor de retorno
         return_sensor = self.entry.data.get(CONF_RETURN_SENSOR_ID)
         current_t_return = None
         if return_sensor:
@@ -242,36 +249,26 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 except ValueError:
                     pass
 
-        # 3. VERIFICACIÓN DE ESTABILIDAD (Análisis de Ventana)
+        # ALGORITMO DE VARIACIÓN:
+        # Acumula lecturas y verifica que la diferencia entre Max y Min sea < 0.2°C
         is_stable = False
         if current_t_return is not None:
             self._sweep_readings.append(current_t_return)
             
-            # Solo analizamos si tenemos una ventana mínima de datos (60s)
-            # y al menos 3 lecturas para tener una muestra estadística
             if elapsed >= 60 and len(self._sweep_readings) >= 3:
-                # Calculamos el rango (varianza) de las últimas lecturas
-                # Podríamos limitar a las últimas N, pero para un barrido corto
-                # usar toda la lista acumulada es más seguro.
                 window_min = min(self._sweep_readings)
                 window_max = max(self._sweep_readings)
                 rango = window_max - window_min
                 
                 if rango < 0.2:
                     is_stable = True
-                    _LOGGER.info("Barrido: Estabilidad detectada. Rango en ventana de %ds: %.2f°C (%d lecturas)", 
-                                elapsed, rango, len(self._sweep_readings))
+                    _LOGGER.info("Barrido: Estabilidad detectada (Rango: %.2f°C)", rango)
         
-        # 4. DECISÓN: ¿Continuamos barriendo o consultamos a la IA?
+        # Si está estable O se acabó el tiempo, procedemos a consultar a la IA
         if is_stable or elapsed >= max_sweep_duration:
-            if not is_stable:
-                _LOGGER.info("Barrido: Finalizado por Timeout (%ds). Rango final: %.2f°C", 
-                            max_sweep_duration, (max(self._sweep_readings) - min(self._sweep_readings)) if self._sweep_readings else 0)
             await self._async_measure_and_consult()
         else:
-            # Seguir barriendo, re-programar chequeo en 15 segundos (más frecuente para detectar estabilidad rápido)
-            _LOGGER.debug("Barrido: Monitoreando... (t_ret=%.1f, elapsed=%ds, lecturas=%d)", 
-                         current_t_return or 0, elapsed, len(self._sweep_readings))
+            # Re-programar chequeo en 15 segundos
             self._sweep_timer = async_call_later(self.hass, 15, self._async_check_sweep_stability)
 
     async def _async_measure_and_consult(self, _now: datetime | None = None) -> None:
@@ -386,6 +383,9 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if sun_state:
             if sun_state.state != "above_horizon":
                 _LOGGER.debug("Sun is down, skipping cycle")
+                # Reset daily tracking when sun goes down
+                self.t_pool_day_start = None
+                self.daily_gain = 0.0
                 await self._async_set_state(STATE_IDLE, self.explanation_engine.get_status_message("sun_below_horizon"))
                 await self._async_control_pump(False)
                 return False
@@ -405,6 +405,18 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if pool_temp_state and pool_temp_state.state not in ["unknown", "unavailable"]:
             try:
                 temp = float(pool_temp_state.state)
+                
+                # Update daily gain tracking
+                if self.t_pool_day_start is None:
+                    # First reading of the day when sun is up and system is active
+                    self.t_pool_day_start = temp
+                    self.daily_gain = 0.0
+                    _LOGGER.info("Starting daily yield tracking. Initial pool temp: %.1f°C", temp)
+                else:
+                    # Calculate current yield relative to start of day
+                    # We use max(0, ...) to avoid negative values if pool cools down initially
+                    self.daily_gain = round(max(0.0, temp - self.t_pool_day_start), 2)
+
                 if temp >= max_temp:
                     await self._async_set_state(STATE_COOLDOWN, self.explanation_engine.get_status_message("max_temp_reached", temp=temp, max_temp=max_temp))
                     await self._async_control_pump(False)

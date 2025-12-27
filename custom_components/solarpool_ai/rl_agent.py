@@ -29,22 +29,22 @@ class RLAgent:
     - delta_bin: 4 levels (0-2, 2-4, 4-6, 6+)
     - uv_bin: 4 levels (0-3, 3-6, 6-9, 9+)
     - wind_bin: 3 levels (0-15, 15-30, 30+)
-    - elevation_bin: 3 levels (0-20, 20-45, 45+)
+    - elevation_bin: 3 niveles (0-20, 20-45, 45+)
     
-    Total states: 4 × 4 × 3 × 3 = 144 states
+    Total de estados: 4 × 4 × 3 × 3 = 144 estados posibles
     
-    Actions: [OFF, ON_20min, ON_40min, ON_60min, ON_90min]
+    Acciones: [APAGADO, ON_20min, ON_40min, ON_60min, ON_90min]
     """
     
-    # State discretization bins
+    # Búferes para la discretización de estados (conversión de valores continuos a categorías)
     DELTA_BINS = [0, 2, 4, 6, float('inf')]
     UV_BINS = [0, 3, 6, 9, float('inf')]
     WIND_BINS = [0, 15, 30, float('inf')]
     ELEVATION_BINS = [0, 20, 45, float('inf')]
     
-    # Q-Learning hyperparameters
-    ALPHA = 0.1  # Learning rate
-    GAMMA = 0.9  # Discount factor
+    # Hiperparámetros de Q-Learning
+    ALPHA = 0.1  # Tasa de aprendizaje (qué tanto valoramos la nueva información)
+    GAMMA = 0.9  # Factor de descuento (valor de recompensas futuras)
     
     def __init__(
         self,
@@ -92,13 +92,9 @@ class RLAgent:
             return DEFAULT_RL_MIN_EXPLORATION
     
     def discretize_state(self, context: dict[str, Any]) -> int:
-        """Convert continuous context to discrete state index.
+        """Convierte los datos de los sensores en un índice de estado único (0-143).
         
-        Args:
-            context: Sensor context with t_pool, t_return, uv_index, etc.
-            
-        Returns:
-            State index (0-143)
+        Este proceso es vital para que la IA pueda 'agrupar' situaciones similares.
         """
         delta = context.get("t_return", 0) - context.get("t_pool", 0)
         uv = context.get("uv_index", 0)
@@ -131,30 +127,29 @@ class RLAgent:
         return len(bins) - 2
     
     def get_action(self, context: dict[str, Any]) -> dict[str, Any]:
-        """Get the best action for the current state.
+        """Determina la mejor acción a tomar según el contexto actual.
         
-        Args:
-            context: Sensor context
-            
-        Returns:
-            Decision dict with action, duration, and metadata
+        Utiliza una estrategia epsilon-greedy: la mayoría de las veces elige la mejor acción
+        conocida, pero ocasionalmente 'explora' nuevas opciones para seguir aprendiendo.
         """
         state = self.discretize_state(context)
         self.last_state = state
         
-        # During warmup, use deterministic rules
+        # Durante los primeros 10 ciclos (bootstrap), usamos reglas lógicas fijas
         if self.is_warmup and self.episode_count < 10:
             action, is_learning = self._get_warmup_action(context)
         else:
-            # Epsilon-greedy action selection
+            # Selección de acción Epsilon-greedy
             if random.random() < self.exploration_rate:
+                # EXPLORACIÓN: Elegimos una acción al azar
                 action = random.randint(0, self.num_actions - 1)
                 is_learning = True
-                _LOGGER.debug("RL Agent: Exploring (ε=%.2f), action=%d", self.exploration_rate, action)
+                _LOGGER.debug("RL Agent: Explorando (ε=%.2f), acción=%d", self.exploration_rate, action)
             else:
+                # EXPLOTACIÓN: Elegimos la acción con el valor Q más alto para este estado
                 action = int(np.argmax(self.q_table[state]))
                 is_learning = False
-                _LOGGER.debug("RL Agent: Exploiting, state=%d, action=%d, Q=%.3f", 
+                _LOGGER.debug("RL Agent: Explotando conocimiento, estado=%d, acción=%d, Q=%.3f", 
                             state, action, self.q_table[state, action])
         
         self.last_action = action
@@ -223,30 +218,30 @@ class RLAgent:
         return round(max(0.01, efficiency_factor * base_gain_per_hour * (duration / 60)), 2)
     
     def update(self, reward: float, next_context: dict[str, Any] | None = None) -> None:
-        """Update Q-table based on observed reward.
+        """Actualiza la tabla Q basándose en la recompensa recibida tras la acción.
         
-        Args:
-            reward: The reward received (thermal_gain - pump_cost)
-            next_context: The next state context (optional)
+        Este es el núcleo del aprendizaje: ajusta los valores de la tabla Q para que
+        las acciones que dieron buenos resultados sean más probables en el futuro.
         """
         if self.last_state is None or self.last_action is None:
-            _LOGGER.warning("RL Agent: Cannot update, no previous state/action")
+            _LOGGER.warning("RL Agent: No se puede actualizar, falta estado/acción previa")
             return
         
-        # Calculate next state max Q-value
+        # Estimamos el valor máximo del siguiente estado (Bellman Equation)
         if next_context is not None:
             next_state = self.discretize_state(next_context)
             max_next_q = np.max(self.q_table[next_state])
         else:
             max_next_q = 0
         
-        # Q-Learning update
+        # Actualización de Q-Learning
         old_q = self.q_table[self.last_state, self.last_action]
+        # Fórmula: NuevoQ = ViejoQ + ALPHA * (Recompensa + GAMMA * MaxSiguienteQ - ViejoQ)
         new_q = old_q + self.ALPHA * (reward + self.GAMMA * max_next_q - old_q)
         self.q_table[self.last_state, self.last_action] = new_q
         
         _LOGGER.info(
-            "RL Update: state=%d, action=%d, reward=%.2f, Q: %.3f -> %.3f",
+            "RL Update: estado=%d, acción=%d, recompensa=%.2f, Q: %.3f -> %.3f",
             self.last_state, self.last_action, reward, old_q, new_q
         )
         

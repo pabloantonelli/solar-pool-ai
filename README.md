@@ -86,8 +86,9 @@ Necesitarás configurar:
 |---------|-------------|
 | `sensor.solarpool_status` | Estado actual traducido |
 | `sensor.solarpool_reasoning` | **Explicación narrativa** de la decisión actual |
+| `sensor.solarpool_daily_gain` | **Ganancia acumulada hoy** (°C) |
 | `sensor.solarpool_next_run` | Próxima evaluación automática |
-| `sensor.solarpool_expected_gain` | Ganancia térmica esperada (°C) |
+| `sensor.solarpool_expected_gain` | Ganancia térmica esperada en el ciclo (°C) |
 
 ### Parámetros (Categoría: Configuración)
 | Entidad | Descripción | Rango |
@@ -183,6 +184,8 @@ stateDiagram-v2
 
 | Versión | Cambios principales |
 |---------|---------------------|
+| **0.0.4** | 📊 Nuevo sensor de **Ganancia Diaria Total** (seguimiento térmico de la jornada). |
+| **0.0.3** | 🧠 IA: Proxy de radiación solar (estimación UV por altura sol) y reajuste de recompensas. |
 | **0.0.2** | 🛡️ Protección de bomba compartida (no apaga si ya estaba filtrando) y disparo inmediato al activar Master. |
 | **0.0.1** | 🚀 Lanzamiento inicial BETA: Reinforcement Learning Local, Análisis de Ventana, Multilenguaje Regional y UI Optimizada. |
 

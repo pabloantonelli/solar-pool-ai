@@ -35,6 +35,7 @@ async def async_setup_entry(
             SolarPoolRLPhaseSensor(coordinator),
             SolarPoolRLEpsilonSensor(coordinator),
             SolarPoolRLRewardSensor(coordinator),
+            SolarPoolDailyGainSensor(coordinator),
         ]
     )
 
@@ -145,3 +146,13 @@ class SolarPoolRLRewardSensor(SolarPoolBaseSensor):
         return self.coordinator.last_reward
     
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+class SolarPoolDailyGainSensor(SolarPoolBaseSensor):
+    """Sensor for Daily Gain tracking."""
+    _attr_icon = "mdi:chart-bell-curve-cumulative"
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    def __init__(self, coordinator: SolarPoolCoordinator) -> None:
+        super().__init__(coordinator, "daily_gain", "Total Daily Gain")
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.daily_gain

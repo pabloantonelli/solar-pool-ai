@@ -554,13 +554,12 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             
         if turn_on:
             if is_already_on:
-                _LOGGER.debug("Pump %s is already ON, SolarPool will use it without taking ownership", pump_entity)
-                # If it was already on, we DON'T set _pump_started_by_us = True
-                # unless we were already heating (continuation)
-                if not self.pump_is_heating and not self.state == STATE_SWEEPING:
-                    self._pump_started_by_us = False 
+                # Si ya éramos los dueños, mantenemos la propiedad.
+                # Solo si NO éramos los dueños y ya está prendida, asumimos que es un proceso externo (filtrado).
+                if not self._pump_started_by_us:
+                    _LOGGER.debug("Bomba %s ya estaba encendida, SolarPool la usará sin tomar propiedad", pump_entity)
             else:
-                _LOGGER.info("Turning ON pump %s (started by SolarPool)", pump_entity)
+                _LOGGER.info("Encendiendo bomba %s (Iniciado por SolarPool)", pump_entity)
                 await self.hass.services.async_call("switch", SERVICE_TURN_ON, {"entity_id": pump_entity}, blocking=True)
                 self._pump_started_by_us = True
                 self._last_pump_on_time = utcnow()

@@ -102,8 +102,14 @@ class RLAgent:
         """
         delta = context.get("t_return", 0) - context.get("t_pool", 0)
         uv = context.get("uv_index", 0)
-        wind = context.get("wind_speed", 0)
         elevation = context.get("sun_elevation", 0)
+
+        # Robustness: If UV is missing (0) but sun is up, use elevation as proxy
+        # This helps the agent differentiate states when weather provider lacks UV data
+        if uv == 0 and elevation > 5:
+            uv = 7 if elevation > 45 else (4 if elevation > 20 else 1)
+
+        wind = context.get("wind_speed", 0)
         
         # Discretize each dimension
         delta_bin = self._bin_value(delta, self.DELTA_BINS)
@@ -112,7 +118,7 @@ class RLAgent:
         elevation_bin = self._bin_value(elevation, self.ELEVATION_BINS)
         
         # Convert to flat index
-        # state = delta_bin * (4*3*3) + uv_bin * (3*3) + wind_bin * 3 + elevation_bin
+        # 4 (delta) * 4 (uv) * 3 (wind) * 3 (elevation)
         state = delta_bin * 36 + uv_bin * 9 + wind_bin * 3 + elevation_bin
         
         return min(state, self.num_states - 1)
@@ -154,10 +160,19 @@ class RLAgent:
         self.last_action = action
         duration = RL_ACTIONS[action]
         
+        # Ensure we have a valid UV and Delta for estimate
+        uv = context.get("uv_index", 0)
+        if uv == 0 and context.get("sun_elevation", 0) > 0:
+            # Proxy UV from elevation if missing
+            elev = context.get("sun_elevation", 0)
+            uv = 7 if elev > 45 else (4 if elev > 20 else 1)
+
+        estimate_context = {**context, "uv_helper": uv}
+        
         return {
             "action": "OFF" if action == 0 else "ON",
             "heating_duration_minutes": duration,
-            "expected_gain": self._estimate_gain(context, duration),
+            "expected_gain": self._estimate_gain(estimate_context, duration),
             "is_learning": is_learning,
             "is_warmup": self.is_warmup,
             "state_index": state,
@@ -192,21 +207,20 @@ class RLAgent:
             return 2, False  # ON_40min
     
     def _estimate_gain(self, context: dict[str, Any], duration: int) -> float:
-        """Estimate thermal gain for a given duration.
-        
-        Simple heuristic based on historical performance.
-        """
+        """Estimate thermal gain for a given duration."""
         if duration == 0:
             return 0.0
         
         delta = context.get("t_return", 0) - context.get("t_pool", 0)
-        uv = context.get("uv_index", 5)
+        # Use uv_helper if present (calculated in get_action)
+        uv = context.get("uv_helper", context.get("uv_index", 5))
         
-        # Rough estimate: 0.5-2°C per hour depending on conditions
-        efficiency_factor = min(1.0, uv / 8) * min(1.0, delta / 5)
-        base_gain_per_hour = 1.5
+        # Even with low delta/uv, if the pump is ON there's some gain
+        # We ensure efficiency_factor has a bottom floor if conditions are met
+        efficiency_factor = max(0.1, min(1.0, uv / 10) * min(1.0, delta / 5))
+        base_gain_per_hour = 1.0 # 1°C per hour under good conditions
         
-        return round(efficiency_factor * base_gain_per_hour * (duration / 60), 2)
+        return round(max(0.01, efficiency_factor * base_gain_per_hour * (duration / 60)), 2)
     
     def update(self, reward: float, next_context: dict[str, Any] | None = None) -> None:
         """Update Q-table based on observed reward.
@@ -244,7 +258,7 @@ class RLAgent:
         self,
         actual_gain: float,
         duration_minutes: int,
-        pump_cost_per_hour: float = 0.5,
+        pump_cost_per_hour: float = 0.05, # Significant reduction in cost penalty
     ) -> float:
         """Calculate reward for a completed cycle.
         

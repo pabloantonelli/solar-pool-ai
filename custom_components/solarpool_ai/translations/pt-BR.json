@@ -1,0 +1,133 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "SolarPool AI - Mapeamento de Entidades",
+                "description": "Configure as entidades que seu sistema usará. Os sensores opcionais permitem usar sensores específicos em vez dos atributos do clima.",
+                "data": {
+                    "pump_entity_id": "Switch da Bomba da Piscina",
+                    "pool_sensor_id": "Sensor de Temperatura da Piscina",
+                    "return_sensor_id": "Sensor de Temperatura de Retorno (dos coletores)",
+                    "weather_entity_id": "Entidade de Clima",
+                    "uv_sensor_id": "Sensor de Índice UV (opcional)",
+                    "wind_sensor_id": "Sensor de Velocidade do Vento (opcional)",
+                    "ambient_temp_sensor_id": "Sensor de Temperatura Ambiente (opcional)"
+                },
+                "data_description": {
+                    "uv_sensor_id": "Use um sensor UV específico (ex: do PirateWeather) em vez do atributo do clima",
+                    "wind_sensor_id": "Use um sensor de vento específico em vez do atributo do clima",
+                    "ambient_temp_sensor_id": "Use um sensor de temperatura específico em vez do atributo do clima"
+                }
+            },
+            "parameters": {
+                "title": "SolarPool AI - Parâmetros",
+                "description": "Ajuste os parâmetros do sistema de acordo com sua instalação.",
+                "data": {
+                    "language": "Idioma",
+                    "sweep_duration": "Duração Máxima de Varredura",
+                    "max_temp": "Temperatura Máxima da Piscina",
+                    "scan_interval": "Intervalo de Ciclos"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "SolarPool AI - Opções",
+                "description": "Modifique os parâmetros do sistema. Você também pode configurar sensores opcionais.",
+                "data": {
+                    "language": "Idioma",
+                    "sweep_duration": "Duração Máxima de Varredura",
+                    "max_temp": "Temperatura Máxima da Piscina",
+                    "scan_interval": "Intervalo de Ciclos",
+                    "uv_sensor_id": "Sensor de Índice UV (opcional)",
+                    "wind_sensor_id": "Sensor de Velocidade do Vento (opcional)",
+                    "ambient_temp_sensor_id": "Sensor de Temperatura Ambiente (opcional)"
+                },
+                "data_description": {
+                    "uv_sensor_id": "Use um sensor UV específico em vez do atributo do clima. Deixe vazio para usar dados do clima ou estimativa automática.",
+                    "wind_sensor_id": "Use um sensor de vento específico em vez do atributo do clima.",
+                    "ambient_temp_sensor_id": "Use um sensor de temperatura específico em vez do atributo do clima."
+                }
+            }
+        }
+    },
+    "solarpool": {
+        "states": {
+            "idle": "Inativo",
+            "sweeping": "Limpando",
+            "measuring": "Medindo",
+            "consulting": "Consultando",
+            "heating": "Aquecendo",
+            "cooldown": "Resfriando",
+            "error": "Erro"
+        },
+        "rl_phases": {
+            "bootstrap": "Bootstrap (Regras Seguras)",
+            "training": "Treinamento (Aprendendo)",
+            "production": "Produção (Otimizado)"
+        },
+        "status_messages": {
+            "initializing": "Inicializando...",
+            "waiting_ha": "Aguardando início do Home Assistant...",
+            "sun_below_horizon": "Sol abaixo do horizonte, sistema em repouso",
+            "sun_too_low": "Sol muito baixo ({elevation:.1f}°), radiação insuficiente",
+            "max_temp_reached": "Temp. piscina ({temp}°C) >= Máx ({max_temp}°C)",
+            "sweep_starting": "Iniciando limpeza para leitura dos sensores...",
+            "sweep_forced": "Iniciando limpeza forçada...",
+            "measuring_sensors": "Coletando dados dos sensores...",
+            "consulting_ai": "Consultando IA para decisão térmica...",
+            "sensor_error": "Erro ao coletar dados dos sensores",
+            "heating_complete": "Ciclo de aquecimento concluído",
+            "safety_override": "[Substituir] Delta real ({delta:.1f}°C) insuficiente (<2.0°C)"
+        },
+        "templates": {
+            "on_optimal": [
+                "☀️ Sol forte e vento calmo. Vamos aproveitar ao máximo!",
+                "🔥 Condições perfeitas para aquecer. Vamos com tudo!",
+                "💪 O telhado está radiante, aproveitando o calor.",
+                "☀️ Dia ideal: UV alto, pouco vento. Hora de aquecer."
+            ],
+            "on_marginal": [
+                "🌤️ Condições regulares, vale a pena tentar.",
+                "⚡ Um pouco de vento, mas o sol compensa. Vamos testar.",
+                "🌤️ Nuvens parciais, mas ainda há ganho térmico.",
+                "🤔 Não é o ideal, mas deve render algo."
+            ],
+            "on_learning": [
+                "🤖 Testando nova estratégia. Depois conto como foi.",
+                "🧪 Explorando novas condições para aprender.",
+                "📊 Coletando dados para melhorar decisões futuras."
+            ],
+            "off_wind": [
+                "💨 Vento de {wind:.0f}km/h resfria os coletores.",
+                "🌬️ Muito vento ({wind:.0f}km/h). Os coletores perdem calor.",
+                "💨 O vento leva o calor mais rápido do que ele entra."
+            ],
+            "off_clouds": [
+                "☁️ Muito nublado. A bomba gastaria mais do que ganharíamos.",
+                "🌧️ Dia cinzento. Sem sol, sem mágica.",
+                "☁️ Céu coberto. Melhor esperar limpar."
+            ],
+            "off_delta": [
+                "📉 Apenas {delta:.1f}°C de diferença. Precisamos de pelo menos 2°C.",
+                "🌡️ Delta T muito baixo ({delta:.1f}°C). Não vale a pena ligar.",
+                "📉 A água do telhado mal está mais quente. Não compensa."
+            ],
+            "off_low_sun": [
+                "🌅 Sol muito baixo ({elevation:.0f}°). Radiação insuficiente.",
+                "🌇 Entardecer. Não há mais radiação suficiente.",
+                "🌅 Sol baixo no horizonte. Melhor amanhã."
+            ],
+            "off_low_uv": [
+                "📉 UV muito baixo ({uv}). Não há radiação suficiente.",
+                "🌫️ Radiação solar insuficiente (UV={uv})."
+            ],
+            "warmup": [
+                "🏋️ Sistema em fase de aprendizado. Usando regras seguras.",
+                "📚 Aprendendo padrões. Decisão conservadora por enquanto."
+            ]
+        }
+    }
+}

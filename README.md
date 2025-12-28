@@ -13,10 +13,12 @@ SolarPool AI es una integración para Home Assistant que automatiza la climatiza
 
 - **🧠 Reinforcement Learning Local**: Aprende de tu sistema específico sin depender de APIs externas
 - **⏱️ Monitoreo de Alta Frecuencia**: Ciclos cada 10 min para una respuesta inmediata a cambios de clima
-- **⚖️ Análisis de Ventana (Estabilidad)**: Algoritmo de varianza que asegura lecturas térmicas reales en cualquier sensor (v2.1.2)
+- **⚖️ Análisis de Ventana (Estabilidad)**: Algoritmo de varianza que asegura lecturas térmicas reales en cualquier sensor
 - **🛡️ Protección de Bomba**: Tiempo mínimo de ejecución (10 min) para evitar arranques frecuentes
-- **🌍 Políglota Regional**: Soporte para Español (Arg/Esp), Inglés, Portugués (Br), Francés y Alemán (v2.1.5)
-- **🎨 UI Limpia**: Entidades categorizadas en Principal, Configuración y Diagnóstico (v2.1.4)
+- **🌍 Políglota Regional**: Soporte para Español (Arg/Esp), Inglés, Portugués (Br), Francés y Alemán
+- **📡 Sensores Opcionales**: Mapea sensores específicos de UV, viento o temperatura ambiente (v0.0.6)
+- **☀️ Estimación Inteligente de UV**: Calcula UV automáticamente basándose en la elevación solar si no hay datos (v0.0.6)
+- **🎨 UI Limpia**: Entidades categorizadas en Principal, Configuración y Diagnóstico
 - **💰 Cero Costos**: Sin gastos en APIs de IA (anteriormente $6-60/mes)
 - **⚡ Respuestas Instantáneas**: Decisiones en microsegundos vs 1-3 segundos con LLMs
 - **🔒 100% Offline**: Funciona sin conexión a internet
@@ -73,9 +75,26 @@ flowchart LR
 Ve a **Ajustes** > **Dispositivos y Servicios** > **Añadir Integración** > **SolarPool AI**
 
 Necesitarás configurar:
-- **Entidades**: Bomba, sensor de piscina, sensor de retorno, entidad de clima
+
+### Entidades Requeridas
+- **Bomba de piscina** (switch)
+- **Sensor de temperatura piscina**
+- **Sensor de temperatura retorno** (de colectores)
+- **Entidad de clima** (weather)
+
+### Sensores Opcionales (v0.0.6)
+Podés mapear sensores específicos en vez de usar los atributos del clima:
+- **Sensor UV** - Por ejemplo: `sensor.pirateweather_uv_index`
+- **Sensor de viento** - Por ejemplo: `sensor.estacion_meteo_wind_speed`
+- **Sensor de temperatura ambiente**
+
+> 💡 **Prioridad de lectura UV**: Sensor configurado → Atributo weather → Estimación automática por elevación solar
+
+### Parámetros
 - **Idioma**: Español (Argentina/España), English, Português, Français o Deutsch
-- **Parámetros**: Barrido máximo, temperatura máxima, intervalo de consulta
+- **Barrido máximo**: Timeout para estabilización de lecturas
+- **Temperatura máxima**: Límite donde se detiene el calentamiento
+- **Intervalo de consulta**: Frecuencia de evaluación
 
 > ⚠️ **No requiere API Keys** - El sistema aprende localmente usando Reinforcement Learning
 
@@ -184,6 +203,7 @@ stateDiagram-v2
 
 | Versión | Cambios principales |
 |---------|---------------------|
+| **0.0.6** | 📡 **Sensores Opcionales**: Mapeo de sensores UV/viento/temperatura independientes. ☀️ **Estimación UV**: Cálculo automático basado en elevación solar. 🌍 **Traducciones JSON**: Migración a formato estándar de Home Assistant. |
 | **0.0.5** | 🐛 **Bugfix**: Corregida pérdida de propiedad de la bomba (ahora se apaga correctamente tras el calentamiento). |
 | **0.0.4** | 📊 Nuevo sensor de **Ganancia Diaria Total** (seguimiento térmico de la jornada). |
 | **0.0.3** | 🧠 IA: Proxy de radiación solar (estimación UV por altura sol) y reajuste de recompensas. |

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import asyncio
+import math
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -26,6 +27,9 @@ from .const import (
     CONF_POOL_SENSOR_ID,
     CONF_RETURN_SENSOR_ID,
     CONF_WEATHER_ENTITY_ID,
+    CONF_UV_SENSOR_ID,
+    CONF_WIND_SENSOR_ID,
+    CONF_AMBIENT_TEMP_SENSOR_ID,
     CONF_SWEEP_DURATION,
     CONF_MAX_TEMP,
     CONF_SCAN_INTERVAL,
@@ -426,6 +430,49 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return True
 
+    def _estimate_uv_from_elevation(self, elevation: float) -> float:
+        """Estimate UV index from sun elevation when no sensor data is available.
+        
+        This is a rough approximation based on the relationship between
+        sun elevation angle and UV intensity. The formula accounts for:
+        - UV is 0 when sun is below horizon or very low
+        - UV increases with sin(elevation) due to shorter atmospheric path
+        - Peak UV occurs around solar noon (highest elevation)
+        
+        Note: This doesn't account for clouds, ozone, or altitude.
+        A dedicated UV sensor is always preferred.
+        """
+        if elevation <= 0:
+            return 0.0
+        
+        # Convert elevation to radians for sin calculation
+        elevation_rad = math.radians(elevation)
+        
+        # Basic formula: UV ≈ 12 * sin(elevation)
+        # This gives approximately:
+        # - elevation 10° → UV ≈ 2.1
+        # - elevation 30° → UV ≈ 6.0
+        # - elevation 50° → UV ≈ 9.2
+        # - elevation 70° → UV ≈ 11.3
+        # - elevation 90° → UV ≈ 12.0
+        estimated_uv = 12.0 * math.sin(elevation_rad)
+        
+        # Clamp to reasonable range (0-12)
+        return round(max(0.0, min(12.0, estimated_uv)), 1)
+
+    def _get_sensor_value(self, sensor_id: str | None, default: float | None = None) -> float | None:
+        """Get a numeric value from a sensor entity."""
+        if not sensor_id:
+            return default
+        
+        state = self.hass.states.get(sensor_id)
+        if state and state.state not in ["unknown", "unavailable"]:
+            try:
+                return float(state.state)
+            except (ValueError, TypeError):
+                pass
+        return default
+
     async def _async_gather_context(self) -> dict[str, Any] | None:
         """Gather all required sensor data for the AI."""
         try:
@@ -446,13 +493,37 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             sun_elevation = sun_state_obj.attributes.get("elevation", 0) if sun_state_obj else 0
             sun_azimuth = sun_state_obj.attributes.get("azimuth", 0) if sun_state_obj else 0
 
+            # Get optional sensor overrides (from options first, then data for backwards compat)
+            uv_sensor = self.entry.options.get(CONF_UV_SENSOR_ID, self.entry.data.get(CONF_UV_SENSOR_ID))
+            wind_sensor = self.entry.options.get(CONF_WIND_SENSOR_ID, self.entry.data.get(CONF_WIND_SENSOR_ID))
+            ambient_sensor = self.entry.options.get(CONF_AMBIENT_TEMP_SENSOR_ID, self.entry.data.get(CONF_AMBIENT_TEMP_SENSOR_ID))
+
+            # UV Index: Priority is sensor > weather attribute > estimation
+            uv_index = self._get_sensor_value(uv_sensor)
+            if uv_index is None:
+                uv_index = weather_state.attributes.get("uv_index")
+            if uv_index is None or uv_index == 0:
+                # Fallback to estimation based on sun elevation
+                uv_index = self._estimate_uv_from_elevation(sun_elevation)
+                _LOGGER.debug("UV estimated from elevation (%.1f°): %.1f", sun_elevation, uv_index)
+
+            # Wind speed: Priority is sensor > weather attribute
+            wind_speed = self._get_sensor_value(wind_sensor)
+            if wind_speed is None:
+                wind_speed = weather_state.attributes.get("wind_speed", 0)
+
+            # Ambient temperature: Priority is sensor > weather attribute
+            temperature_ext = self._get_sensor_value(ambient_sensor)
+            if temperature_ext is None:
+                temperature_ext = weather_state.attributes.get("temperature")
+
             return {
                 "t_pool": float(pool_state.state),
                 "t_return": float(return_state.state),
                 "weather_state": weather_state.state,
-                "temperature_ext": weather_state.attributes.get("temperature"),
-                "wind_speed": weather_state.attributes.get("wind_speed"),
-                "uv_index": weather_state.attributes.get("uv_index", 0),
+                "temperature_ext": temperature_ext,
+                "wind_speed": wind_speed,
+                "uv_index": uv_index,
                 "sun_elevation": sun_elevation,
                 "sun_azimuth": sun_azimuth,
                 "performance_history": self._get_performance_summary(),

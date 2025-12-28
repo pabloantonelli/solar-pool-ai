@@ -1,0 +1,133 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "SolarPool AI - Entity Mapping",
+                "description": "Configure the entities your system will use. The optional sensors allow you to use specific sensors instead of weather entity attributes.",
+                "data": {
+                    "pump_entity_id": "Pool Pump Switch",
+                    "pool_sensor_id": "Pool Temperature Sensor",
+                    "return_sensor_id": "Return Temperature Sensor (from collectors)",
+                    "weather_entity_id": "Weather Entity",
+                    "uv_sensor_id": "UV Index Sensor (optional)",
+                    "wind_sensor_id": "Wind Speed Sensor (optional)",
+                    "ambient_temp_sensor_id": "Ambient Temperature Sensor (optional)"
+                },
+                "data_description": {
+                    "uv_sensor_id": "Use a specific UV sensor (e.g., from PirateWeather) instead of weather attribute",
+                    "wind_sensor_id": "Use a specific wind sensor instead of weather attribute",
+                    "ambient_temp_sensor_id": "Use a specific temperature sensor instead of weather attribute"
+                }
+            },
+            "parameters": {
+                "title": "SolarPool AI - Parameters",
+                "description": "Adjust the system parameters according to your setup.",
+                "data": {
+                    "language": "Language",
+                    "sweep_duration": "Max Sweep Duration",
+                    "max_temp": "Maximum Pool Temperature",
+                    "scan_interval": "Cycle Interval"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "SolarPool AI - Options",
+                "description": "Modify system parameters. You can also configure optional sensor overrides.",
+                "data": {
+                    "language": "Language",
+                    "sweep_duration": "Max Sweep Duration",
+                    "max_temp": "Maximum Pool Temperature",
+                    "scan_interval": "Cycle Interval",
+                    "uv_sensor_id": "UV Index Sensor (optional)",
+                    "wind_sensor_id": "Wind Speed Sensor (optional)",
+                    "ambient_temp_sensor_id": "Ambient Temperature Sensor (optional)"
+                },
+                "data_description": {
+                    "uv_sensor_id": "Use a specific UV sensor instead of weather attribute. Leave empty to use weather data or automatic estimation.",
+                    "wind_sensor_id": "Use a specific wind sensor instead of weather attribute.",
+                    "ambient_temp_sensor_id": "Use a specific temperature sensor instead of weather attribute."
+                }
+            }
+        }
+    },
+    "solarpool": {
+        "states": {
+            "idle": "Idle",
+            "sweeping": "Sweeping",
+            "measuring": "Measuring",
+            "consulting": "Consulting",
+            "heating": "Heating",
+            "cooldown": "Cooling down",
+            "error": "Error"
+        },
+        "rl_phases": {
+            "bootstrap": "Bootstrap (Safe Rules)",
+            "training": "Training (Learning)",
+            "production": "Production (Optimized)"
+        },
+        "status_messages": {
+            "initializing": "Initializing...",
+            "waiting_ha": "Waiting for Home Assistant to start...",
+            "sun_below_horizon": "Sun below horizon, system resting",
+            "sun_too_low": "Sun too low ({elevation:.1f}°), insufficient radiation",
+            "max_temp_reached": "Pool temp ({temp}°C) >= Max ({max_temp}°C)",
+            "sweep_starting": "Starting sweep for sensor readings...",
+            "sweep_forced": "Starting forced sweep...",
+            "measuring_sensors": "Taking sensor measurements...",
+            "consulting_ai": "Consulting AI for thermal decision...",
+            "sensor_error": "Error gathering sensor data",
+            "heating_complete": "Heating cycle completed",
+            "safety_override": "[Override] Actual delta ({delta:.1f}°C) insufficient (<2.0°C)"
+        },
+        "templates": {
+            "on_optimal": [
+                "☀️ Strong sun, calm wind. Let's heat up!",
+                "🔥 Perfect conditions. Going full power!",
+                "💪 Roof is radiating. Capturing the heat.",
+                "☀️ Ideal day: high UV, low wind. Heating time."
+            ],
+            "on_marginal": [
+                "🌤️ Fair conditions, worth a try.",
+                "⚡ Some wind, but sun compensates. Let's try.",
+                "🌤️ Partial clouds, but still some thermal gain.",
+                "🤔 Not ideal, but should get some gain."
+            ],
+            "on_learning": [
+                "🤖 Testing new strategy. I'll report back.",
+                "🧪 Exploring new conditions to learn.",
+                "📊 Gathering data to improve future decisions."
+            ],
+            "off_wind": [
+                "💨 {wind:.0f}km/h wind cools the collectors.",
+                "🌬️ Too much wind ({wind:.0f}km/h). Heat escapes.",
+                "💨 Wind carries heat away faster than it comes in."
+            ],
+            "off_clouds": [
+                "☁️ Too cloudy. Pump would waste more than we gain.",
+                "🌧️ Gray day. No sun, no magic.",
+                "☁️ Sky covered. Better wait for clear skies."
+            ],
+            "off_delta": [
+                "📉 Only {delta:.1f}°C difference. Need at least 2°C.",
+                "🌡️ Delta T too low ({delta:.1f}°C). Not worth it.",
+                "📉 Roof water barely warmer. Not worth running."
+            ],
+            "off_low_sun": [
+                "🌅 Sun too low ({elevation:.0f}°). Insufficient radiation.",
+                "🌇 Sunset approaching. Not enough radiation left.",
+                "🌅 Sun low on horizon. Better tomorrow."
+            ],
+            "off_low_uv": [
+                "📉 UV too low ({uv}). Not enough radiation.",
+                "🌫️ Solar radiation insufficient (UV={uv})."
+            ],
+            "warmup": [
+                "🏋️ System in learning phase. Using safe rules.",
+                "📚 Learning patterns. Conservative decision for now."
+            ]
+        }
+    }
+}

@@ -10,11 +10,13 @@
                     "return_sensor_id": "Sensor de Temperatura de Retorno (de colectores)",
                     "weather_entity_id": "Entidad de Clima",
                     "uv_sensor_id": "Sensor de Índice UV (opcional)",
+                    "cloud_coverage_sensor_id": "Sensor de Cobertura de Nubes (opcional)",
                     "wind_sensor_id": "Sensor de Velocidad de Viento (opcional)",
                     "ambient_temp_sensor_id": "Sensor de Temperatura Ambiente (opcional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Usá un sensor UV específico (ej: de PirateWeather) en vez del atributo del clima",
+                    "cloud_coverage_sensor_id": "% de nubes para calcular UV efectivo (UV × (1 - nubes/100))",
                     "wind_sensor_id": "Usá un sensor de viento específico en vez del atributo del clima",
                     "ambient_temp_sensor_id": "Usá un sensor de temperatura específico en vez del atributo del clima"
                 }
@@ -42,11 +44,13 @@
                     "max_temp": "Temperatura Máxima de Pileta",
                     "scan_interval": "Intervalo de Ciclos",
                     "uv_sensor_id": "Sensor de Índice UV (opcional)",
+                    "cloud_coverage_sensor_id": "Sensor de Cobertura de Nubes (opcional)",
                     "wind_sensor_id": "Sensor de Velocidad de Viento (opcional)",
                     "ambient_temp_sensor_id": "Sensor de Temperatura Ambiente (opcional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Usá un sensor UV específico en vez del atributo del clima. Dejá vacío para usar datos del clima o estimación automática.",
+                    "cloud_coverage_sensor_id": "% de nubes para calcular UV efectivo. Con 80% nubes, UV 8 se convierte en 1.6.",
                     "wind_sensor_id": "Usá un sensor de viento específico en vez del atributo del clima.",
                     "ambient_temp_sensor_id": "Usá un sensor de temperatura específico en vez del atributo del clima."
                 }

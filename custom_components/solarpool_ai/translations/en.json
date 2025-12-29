@@ -10,11 +10,13 @@
                     "return_sensor_id": "Return Temperature Sensor (from collectors)",
                     "weather_entity_id": "Weather Entity",
                     "uv_sensor_id": "UV Index Sensor (optional)",
+                    "cloud_coverage_sensor_id": "Cloud Coverage Sensor (optional)",
                     "wind_sensor_id": "Wind Speed Sensor (optional)",
                     "ambient_temp_sensor_id": "Ambient Temperature Sensor (optional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Use a specific UV sensor (e.g., from PirateWeather) instead of weather attribute",
+                    "cloud_coverage_sensor_id": "Cloud coverage % to calculate effective UV (UV × (1 - clouds/100))",
                     "wind_sensor_id": "Use a specific wind sensor instead of weather attribute",
                     "ambient_temp_sensor_id": "Use a specific temperature sensor instead of weather attribute"
                 }
@@ -42,11 +44,13 @@
                     "max_temp": "Maximum Pool Temperature",
                     "scan_interval": "Cycle Interval",
                     "uv_sensor_id": "UV Index Sensor (optional)",
+                    "cloud_coverage_sensor_id": "Cloud Coverage Sensor (optional)",
                     "wind_sensor_id": "Wind Speed Sensor (optional)",
                     "ambient_temp_sensor_id": "Ambient Temperature Sensor (optional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Use a specific UV sensor instead of weather attribute. Leave empty to use weather data or automatic estimation.",
+                    "cloud_coverage_sensor_id": "Cloud coverage % to calculate effective UV. With 80% clouds, UV 8 becomes 1.6.",
                     "wind_sensor_id": "Use a specific wind sensor instead of weather attribute.",
                     "ambient_temp_sensor_id": "Use a specific temperature sensor instead of weather attribute."
                 }

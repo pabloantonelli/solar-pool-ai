@@ -21,6 +21,7 @@ from .const import (
     CONF_UV_SENSOR_ID,
     CONF_WIND_SENSOR_ID,
     CONF_AMBIENT_TEMP_SENSOR_ID,
+    CONF_CLOUD_COVERAGE_SENSOR_ID,
     CONF_SWEEP_DURATION,
     CONF_MAX_TEMP,
     CONF_SCAN_INTERVAL,
@@ -69,6 +70,9 @@ class SolarPoolConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     # Optional sensor overrides
                     vol.Optional(CONF_UV_SENSOR_ID): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="sensor")
+                    ),
+                    vol.Optional(CONF_CLOUD_COVERAGE_SENSOR_ID): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="sensor")
                     ),
                     vol.Optional(CONF_WIND_SENSOR_ID): selector.EntitySelector(
@@ -182,6 +186,10 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
                 CONF_UV_SENSOR_ID,
                 self.config_entry.data.get(CONF_UV_SENSOR_ID)
             )
+            cloud_sensor = self.config_entry.options.get(
+                CONF_CLOUD_COVERAGE_SENSOR_ID,
+                self.config_entry.data.get(CONF_CLOUD_COVERAGE_SENSOR_ID)
+            )
             wind_sensor = self.config_entry.options.get(
                 CONF_WIND_SENSOR_ID,
                 self.config_entry.data.get(CONF_WIND_SENSOR_ID)
@@ -254,6 +262,15 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
                 )
             else:
                 schema_dict[vol.Optional(CONF_UV_SENSOR_ID)] = selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                )
+            
+            if cloud_sensor:
+                schema_dict[vol.Optional(CONF_CLOUD_COVERAGE_SENSOR_ID, default=cloud_sensor)] = selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                )
+            else:
+                schema_dict[vol.Optional(CONF_CLOUD_COVERAGE_SENSOR_ID)] = selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
                 )
             

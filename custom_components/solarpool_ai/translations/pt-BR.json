@@ -10,11 +10,13 @@
                     "return_sensor_id": "Sensor de Temperatura de Retorno (dos coletores)",
                     "weather_entity_id": "Entidade de Clima",
                     "uv_sensor_id": "Sensor de Índice UV (opcional)",
+                    "cloud_coverage_sensor_id": "Sensor de Cobertura de Nuvens (opcional)",
                     "wind_sensor_id": "Sensor de Velocidade do Vento (opcional)",
                     "ambient_temp_sensor_id": "Sensor de Temperatura Ambiente (opcional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Use um sensor UV específico (ex: do PirateWeather) em vez do atributo do clima",
+                    "cloud_coverage_sensor_id": "% de nuvens para calcular UV efetivo (UV × (1 - nuvens/100))",
                     "wind_sensor_id": "Use um sensor de vento específico em vez do atributo do clima",
                     "ambient_temp_sensor_id": "Use um sensor de temperatura específico em vez do atributo do clima"
                 }
@@ -42,11 +44,13 @@
                     "max_temp": "Temperatura Máxima da Piscina",
                     "scan_interval": "Intervalo de Ciclos",
                     "uv_sensor_id": "Sensor de Índice UV (opcional)",
+                    "cloud_coverage_sensor_id": "Sensor de Cobertura de Nuvens (opcional)",
                     "wind_sensor_id": "Sensor de Velocidade do Vento (opcional)",
                     "ambient_temp_sensor_id": "Sensor de Temperatura Ambiente (opcional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Use um sensor UV específico em vez do atributo do clima. Deixe vazio para usar dados do clima ou estimativa automática.",
+                    "cloud_coverage_sensor_id": "% de nuvens para calcular UV efetivo. Com 80% nuvens, UV 8 se torna 1.6.",
                     "wind_sensor_id": "Use um sensor de vento específico em vez do atributo do clima.",
                     "ambient_temp_sensor_id": "Use um sensor de temperatura específico em vez do atributo do clima."
                 }

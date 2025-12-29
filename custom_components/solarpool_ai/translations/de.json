@@ -10,11 +10,13 @@
                     "return_sensor_id": "Rücklauf-Temperatursensor (von Kollektoren)",
                     "weather_entity_id": "Wetter-Entität",
                     "uv_sensor_id": "UV-Index-Sensor (optional)",
+                    "cloud_coverage_sensor_id": "Wolkenbedeckungs-Sensor (optional)",
                     "wind_sensor_id": "Windgeschwindigkeits-Sensor (optional)",
                     "ambient_temp_sensor_id": "Umgebungstemperatur-Sensor (optional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Verwenden Sie einen spezifischen UV-Sensor (z.B. von PirateWeather) anstelle des Wetterattributs",
+                    "cloud_coverage_sensor_id": "% Wolken zur Berechnung des effektiven UV (UV × (1 - Wolken/100))",
                     "wind_sensor_id": "Verwenden Sie einen spezifischen Windsensor anstelle des Wetterattributs",
                     "ambient_temp_sensor_id": "Verwenden Sie einen spezifischen Temperatursensor anstelle des Wetterattributs"
                 }
@@ -42,11 +44,13 @@
                     "max_temp": "Maximale Pooltemperatur",
                     "scan_interval": "Zyklusintervall",
                     "uv_sensor_id": "UV-Index-Sensor (optional)",
+                    "cloud_coverage_sensor_id": "Wolkenbedeckungs-Sensor (optional)",
                     "wind_sensor_id": "Windgeschwindigkeits-Sensor (optional)",
                     "ambient_temp_sensor_id": "Umgebungstemperatur-Sensor (optional)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Verwenden Sie einen spezifischen UV-Sensor anstelle des Wetterattributs. Leer lassen für Wetterdaten oder automatische Schätzung.",
+                    "cloud_coverage_sensor_id": "% Wolken zur Berechnung des effektiven UV. Mit 80% Wolken wird UV 8 zu 1.6.",
                     "wind_sensor_id": "Verwenden Sie einen spezifischen Windsensor anstelle des Wetterattributs.",
                     "ambient_temp_sensor_id": "Verwenden Sie einen spezifischen Temperatursensor anstelle des Wetterattributs."
                 }

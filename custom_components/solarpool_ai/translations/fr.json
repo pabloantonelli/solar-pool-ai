@@ -10,11 +10,13 @@
                     "return_sensor_id": "Capteur de Température de Retour (des collecteurs)",
                     "weather_entity_id": "Entité Météo",
                     "uv_sensor_id": "Capteur d'Indice UV (optionnel)",
+                    "cloud_coverage_sensor_id": "Capteur de Couverture Nuageuse (optionnel)",
                     "wind_sensor_id": "Capteur de Vitesse du Vent (optionnel)",
                     "ambient_temp_sensor_id": "Capteur de Température Ambiante (optionnel)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Utilisez un capteur UV spécifique (ex: de PirateWeather) au lieu de l'attribut météo",
+                    "cloud_coverage_sensor_id": "% de nuages pour calculer l'UV effectif (UV × (1 - nuages/100))",
                     "wind_sensor_id": "Utilisez un capteur de vent spécifique au lieu de l'attribut météo",
                     "ambient_temp_sensor_id": "Utilisez un capteur de température spécifique au lieu de l'attribut météo"
                 }
@@ -42,11 +44,13 @@
                     "max_temp": "Température Maximale de Piscine",
                     "scan_interval": "Intervalle de Cycles",
                     "uv_sensor_id": "Capteur d'Indice UV (optionnel)",
+                    "cloud_coverage_sensor_id": "Capteur de Couverture Nuageuse (optionnel)",
                     "wind_sensor_id": "Capteur de Vitesse du Vent (optionnel)",
                     "ambient_temp_sensor_id": "Capteur de Température Ambiante (optionnel)"
                 },
                 "data_description": {
                     "uv_sensor_id": "Utilisez un capteur UV spécifique au lieu de l'attribut météo. Laissez vide pour utiliser les données météo ou l'estimation automatique.",
+                    "cloud_coverage_sensor_id": "% de nuages pour calculer l'UV effectif. Avec 80% de nuages, UV 8 devient 1.6.",
                     "wind_sensor_id": "Utilisez un capteur de vent spécifique au lieu de l'attribut météo.",
                     "ambient_temp_sensor_id": "Utilisez un capteur de température spécifique au lieu de l'attribut météo."
                 }

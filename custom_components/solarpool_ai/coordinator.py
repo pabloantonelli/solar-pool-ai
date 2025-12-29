@@ -30,6 +30,7 @@ from .const import (
     CONF_UV_SENSOR_ID,
     CONF_WIND_SENSOR_ID,
     CONF_AMBIENT_TEMP_SENSOR_ID,
+    CONF_CLOUD_COVERAGE_SENSOR_ID,
     CONF_SWEEP_DURATION,
     CONF_MAX_TEMP,
     CONF_SCAN_INTERVAL,
@@ -495,25 +496,54 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             # Get optional sensor overrides (from options first, then data for backwards compat)
             uv_sensor = self.entry.options.get(CONF_UV_SENSOR_ID, self.entry.data.get(CONF_UV_SENSOR_ID))
+            cloud_sensor = self.entry.options.get(CONF_CLOUD_COVERAGE_SENSOR_ID, self.entry.data.get(CONF_CLOUD_COVERAGE_SENSOR_ID))
             wind_sensor = self.entry.options.get(CONF_WIND_SENSOR_ID, self.entry.data.get(CONF_WIND_SENSOR_ID))
             ambient_sensor = self.entry.options.get(CONF_AMBIENT_TEMP_SENSOR_ID, self.entry.data.get(CONF_AMBIENT_TEMP_SENSOR_ID))
 
+            # Cloud coverage: Get from sensor if configured
+            cloud_coverage = self._get_sensor_value(cloud_sensor)
+            if cloud_coverage is None:
+                # Try weather entity attributes (some weather integrations have this)
+                cloud_coverage = weather_state.attributes.get("cloud_coverage", 0)
+            
+            # Clamp cloud coverage to 0-100 range
+            cloud_coverage = max(0, min(100, cloud_coverage or 0))
+
             # UV Index: Priority is sensor > weather attribute > estimation
             # IMPORTANT: If a sensor returns 0, that's valid data (cloudy day), don't override!
-            uv_index = self._get_sensor_value(uv_sensor)
-            uv_source = "sensor" if uv_index is not None else None
+            uv_index_raw = self._get_sensor_value(uv_sensor)
+            uv_source = "sensor" if uv_index_raw is not None else None
             
-            if uv_index is None:
-                uv_index = weather_state.attributes.get("uv_index")
-                uv_source = "weather" if uv_index is not None else None
+            if uv_index_raw is None:
+                uv_index_raw = weather_state.attributes.get("uv_index")
+                uv_source = "weather" if uv_index_raw is not None else None
             
             # Only estimate if we have NO data at all (None), not if value is 0
-            if uv_index is None:
-                uv_index = self._estimate_uv_from_elevation(sun_elevation)
+            if uv_index_raw is None:
+                uv_index_raw = self._estimate_uv_from_elevation(sun_elevation)
                 uv_source = "estimated"
-                _LOGGER.debug("UV estimated from elevation (%.1f°): %.1f", sun_elevation, uv_index)
+                _LOGGER.debug("UV estimated from elevation (%.1f°): %.1f", sun_elevation, uv_index_raw)
+            
+            # Apply cloud coverage penalty to UV
+            # Scientific basis: clouds reduce UV but not completely
+            # - 0% clouds: 100% UV transmission
+            # - 50% clouds: ~57% UV transmission  
+            # - 82% clouds: ~30% UV transmission
+            # - 100% clouds: ~15% UV transmission (always some diffuse UV)
+            # Formula: cloud_factor = max(0.15, 1 - (0.85 × cloud_coverage/100))
+            if cloud_coverage > 0 and uv_source != "estimated":
+                cloud_factor = max(0.15, 1 - (0.85 * cloud_coverage / 100))
+                uv_index = round(uv_index_raw * cloud_factor, 1)
+                _LOGGER.debug(
+                    "UV from %s: %.1f, clouds: %.0f%%, factor: %.2f, UV effective: %.1f",
+                    uv_source, uv_index_raw, cloud_coverage, cloud_factor, uv_index
+                )
             else:
-                _LOGGER.debug("UV from %s: %.1f", uv_source, uv_index)
+                uv_index = uv_index_raw
+                if cloud_coverage == 0:
+                    _LOGGER.debug("UV from %s: %.1f (clear sky)", uv_source, uv_index)
+                else:
+                    _LOGGER.debug("UV from %s: %.1f", uv_source, uv_index)
 
             # Wind speed: Priority is sensor > weather attribute
             wind_speed = self._get_sensor_value(wind_sensor)
@@ -532,6 +562,8 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "temperature_ext": temperature_ext,
                 "wind_speed": wind_speed,
                 "uv_index": uv_index,
+                "uv_index_raw": uv_index_raw,
+                "cloud_coverage": cloud_coverage,
                 "sun_elevation": sun_elevation,
                 "sun_azimuth": sun_azimuth,
                 "performance_history": self._get_performance_summary(),

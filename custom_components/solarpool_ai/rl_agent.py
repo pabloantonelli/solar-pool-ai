@@ -99,12 +99,6 @@ class RLAgent:
         delta = context.get("t_return", 0) - context.get("t_pool", 0)
         uv = context.get("uv_index", 0)
         elevation = context.get("sun_elevation", 0)
-
-        # Robustness: If UV is missing (0) but sun is up, use elevation as proxy
-        # This helps the agent differentiate states when weather provider lacks UV data
-        if uv == 0 and elevation > 5:
-            uv = 7 if elevation > 45 else (4 if elevation > 20 else 1)
-
         wind = context.get("wind_speed", 0)
         
         # Discretize each dimension
@@ -155,19 +149,13 @@ class RLAgent:
         self.last_action = action
         duration = RL_ACTIONS[action]
         
-        # Ensure we have a valid UV and Delta for estimate
+        # UV is already properly set by coordinator (sensor > weather > estimation)
         uv = context.get("uv_index", 0)
-        if uv == 0 and context.get("sun_elevation", 0) > 0:
-            # Proxy UV from elevation if missing
-            elev = context.get("sun_elevation", 0)
-            uv = 7 if elev > 45 else (4 if elev > 20 else 1)
-
-        estimate_context = {**context, "uv_helper": uv}
         
         return {
             "action": "OFF" if action == 0 else "ON",
             "heating_duration_minutes": duration,
-            "expected_gain": self._estimate_gain(estimate_context, duration),
+            "expected_gain": self._estimate_gain(context, duration),
             "is_learning": is_learning,
             "is_warmup": self.is_warmup,
             "state_index": state,
@@ -202,20 +190,27 @@ class RLAgent:
             return 2, False  # ON_40min
     
     def _estimate_gain(self, context: dict[str, Any], duration: int) -> float:
-        """Estimate thermal gain for a given duration."""
+        """Estimate thermal gain for a given duration.
+        
+        Args:
+            context: Sensor context with uv_index, t_return, t_pool
+            duration: Pump duration in minutes
+            
+        Returns:
+            Estimated temperature gain in °C
+        """
         if duration == 0:
             return 0.0
         
         delta = context.get("t_return", 0) - context.get("t_pool", 0)
-        # Use uv_helper if present (calculated in get_action)
-        uv = context.get("uv_helper", context.get("uv_index", 5))
+        uv = context.get("uv_index", 0)
         
-        # Even with low delta/uv, if the pump is ON there's some gain
-        # We ensure efficiency_factor has a bottom floor if conditions are met
-        efficiency_factor = max(0.1, min(1.0, uv / 10) * min(1.0, delta / 5))
-        base_gain_per_hour = 1.0 # 1°C per hour under good conditions
+        # Efficiency factor: combines UV and delta influence
+        # With UV=0 (cloudy), efficiency is very low
+        efficiency_factor = max(0.05, min(1.0, uv / 10) * min(1.0, delta / 5))
+        base_gain_per_hour = 1.0  # 1°C per hour under ideal conditions
         
-        return round(max(0.01, efficiency_factor * base_gain_per_hour * (duration / 60)), 2)
+        return round(max(0.0, efficiency_factor * base_gain_per_hour * (duration / 60)), 2)
     
     def update(self, reward: float, next_context: dict[str, Any] | None = None) -> None:
         """Actualiza la tabla Q basándose en la recompensa recibida tras la acción.

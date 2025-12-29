@@ -499,13 +499,21 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ambient_sensor = self.entry.options.get(CONF_AMBIENT_TEMP_SENSOR_ID, self.entry.data.get(CONF_AMBIENT_TEMP_SENSOR_ID))
 
             # UV Index: Priority is sensor > weather attribute > estimation
+            # IMPORTANT: If a sensor returns 0, that's valid data (cloudy day), don't override!
             uv_index = self._get_sensor_value(uv_sensor)
+            uv_source = "sensor" if uv_index is not None else None
+            
             if uv_index is None:
                 uv_index = weather_state.attributes.get("uv_index")
-            if uv_index is None or uv_index == 0:
-                # Fallback to estimation based on sun elevation
+                uv_source = "weather" if uv_index is not None else None
+            
+            # Only estimate if we have NO data at all (None), not if value is 0
+            if uv_index is None:
                 uv_index = self._estimate_uv_from_elevation(sun_elevation)
+                uv_source = "estimated"
                 _LOGGER.debug("UV estimated from elevation (%.1f°): %.1f", sun_elevation, uv_index)
+            else:
+                _LOGGER.debug("UV from %s: %.1f", uv_source, uv_index)
 
             # Wind speed: Priority is sensor > weather attribute
             wind_speed = self._get_sensor_value(wind_sensor)

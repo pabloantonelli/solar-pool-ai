@@ -6,9 +6,11 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_ON
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from homeassistant.helpers.restore_state import RestoreEntity
 from .const import DOMAIN
 from .coordinator import SolarPoolCoordinator
 
@@ -22,7 +24,7 @@ async def async_setup_entry(
 
     async_add_entities([SolarPoolMasterSwitch(coordinator)])
 
-class SolarPoolMasterSwitch(CoordinatorEntity[SolarPoolCoordinator], SwitchEntity):
+class SolarPoolMasterSwitch(CoordinatorEntity[SolarPoolCoordinator], SwitchEntity, RestoreEntity):
     """Switch for SolarPool Master Control."""
 
     _attr_name = "SolarPool Master"
@@ -32,13 +34,26 @@ class SolarPoolMasterSwitch(CoordinatorEntity[SolarPoolCoordinator], SwitchEntit
         """Initialize the switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.entry.entry_id}_master"
-        self._is_on = True
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.entry.entry_id)},
             "name": "SolarPool AI",
             "manufacturer": "Custom Integration",
             "model": "RL Swimming Pool Controller",
         }
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state:
+            self.coordinator.enabled = last_state.state == STATE_ON
+            # If restored as OFF, ensure pump tracking logic is aware/pump off if needed
+            if not self.coordinator.enabled:
+                # We don't force pump OFF here blindly to avoid stopping it during startup if filtering,
+                # but we ensure internal flag matches.
+                # However, async_turn_off usually stops it. 
+                # On startup, we probably just want to update the logical state.
+                pass
 
     @property
     def is_on(self) -> bool:

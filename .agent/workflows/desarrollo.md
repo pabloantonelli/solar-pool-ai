@@ -90,6 +90,7 @@ custom_components/solarpool_ai/
 ├── config_flow.py         # UI de configuración
 ├── coordinator.py         # Lógica principal
 ├── translations.py        # Helper para leer traducciones
+├── brand/                 # Ícono de la integración (icon.png 256px, icon@2x.png 512px, PNG transparente)
 ├── messages/              # Textos propios del sistema (estados, templates) por idioma
 ├── translations/          # Traducciones estándar de HA (solo config/options)
 │   ├── en.json

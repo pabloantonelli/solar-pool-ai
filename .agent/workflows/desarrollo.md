@@ -18,8 +18,9 @@ description: Proceso de desarrollo y release para SolarPool AI
   - `translations/pt-BR.json`
   - `translations/fr.json`
   - `translations/de.json`
-- [ ] Config flow labels van en `config.step.*` y `options.step.*`
-- [ ] Textos del sistema van en `solarpool.*`
+- [ ] Config flow labels van en `config.step.*` y `options.step.*` (en `translations/`)
+- [ ] Textos del sistema (estados, mensajes, templates) van en `messages/<idioma>.json` bajo `solarpool.*`
+  - ⚠️ NUNCA poner listas ni secciones propias en `translations/`: HA valida esos archivos y la integración no carga
 
 ---
 
@@ -89,7 +90,8 @@ custom_components/solarpool_ai/
 ├── config_flow.py         # UI de configuración
 ├── coordinator.py         # Lógica principal
 ├── translations.py        # Helper para leer traducciones
-├── translations/          # Archivos JSON de traducción
+├── messages/              # Textos propios del sistema (estados, templates) por idioma
+├── translations/          # Traducciones estándar de HA (solo config/options)
 │   ├── en.json
 │   ├── es.json
 │   ├── pt-BR.json

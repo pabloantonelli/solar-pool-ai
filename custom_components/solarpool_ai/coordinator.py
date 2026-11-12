@@ -64,6 +64,7 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=None,  # We manage our own intervals
         )

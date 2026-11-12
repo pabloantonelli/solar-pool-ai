@@ -1,0 +1,79 @@
+{
+  "solarpool": {
+    "states": {
+      "idle": "Inaktiv",
+      "sweeping": "Spülen",
+      "measuring": "Messen",
+      "consulting": "Beraten",
+      "heating": "Heizen",
+      "cooldown": "Abkühlen",
+      "error": "Fehler"
+    },
+    "rl_phases": {
+      "bootstrap": "Initialisierung (Sicherheitsregeln)",
+      "training": "Training (Lernen)",
+      "production": "Produktion (Optimiert)"
+    },
+    "status_messages": {
+      "initializing": "Initialisierung...",
+      "waiting_ha": "Warten auf den Start von Home Assistant...",
+      "sun_below_horizon": "Sonne unter dem Horizont, System im Ruhezustand",
+      "sun_too_low": "Sonne zu tief ({elevation:.1f}°), unzureichende Strahlung",
+      "max_temp_reached": "Pooltemp. ({temp}°C) >= Max ({max_temp}°C)",
+      "sweep_starting": "Starte Spülvorgang für Sensormessungen...",
+      "sweep_forced": "Starte erzwungenen Spülvorgang...",
+      "measuring_sensors": "Sensormessungen werden durchgeführt...",
+      "consulting_ai": "KI wird für thermische Entscheidung konsultiert...",
+      "sensor_error": "Fehler beim Erfassen der Sensordaten",
+      "heating_complete": "Heizzyklus abgeschlossen",
+      "safety_override": "[Override] Aktuelles Delta ({delta:.1f}°C) unzureichend (<2.0°C)"
+    },
+    "templates": {
+      "on_optimal": [
+        "☀️ Starke Sonne, wenig Wind. Nutzen wir es voll aus!",
+        "🔥 Perfekte Bedingungen zum Heizen. Los geht's!",
+        "💪 Das Dach strahlt, wir fangen die Wärme ein.",
+        "☀️ Idealer Tag: Hoher UV, wenig Wind. Zeit zum Heizen."
+      ],
+      "on_marginal": [
+        "🌤️ Durchschnittliche Bedingungen, einen Versuch wert.",
+        "⚡ Etwas Wind, aber die Sonne gleicht es aus. Wir probieren es.",
+        "🌤️ Leichte Bewölkung, aber immer noch Wärmegewinn.",
+        "🤔 Nicht ideal, aber es sollte etwas bringen."
+      ],
+      "on_learning": [
+        "🤖 Teste neue Strategie. Ich werde berichten.",
+        "🧪 Erforsche neue Bedingungen zum Lernen.",
+        "📊 Sammle Daten zur Verbesserung zukünftiger Entscheidungen."
+      ],
+      "off_wind": [
+        "💨 {wind:.0f}km/h Wind kühlt die Kollektoren ab.",
+        "🌬️ Zu viel Wind ({wind:.0f}km/h). Die Kollektoren verlieren Wärme.",
+        "💨 Der Wind trägt die Wärme schneller weg, als sie reinkommt."
+      ],
+      "off_clouds": [
+        "☁️ Zu bewölkt. Die Pumpe würde mehr verbrauchen, als wir gewinnen.",
+        "🌧️ Grauer Tag. Keine Sonne, keine Magie.",
+        "☁️ Himmel bedeckt. Besser warten, bis es aufklart."
+      ],
+      "off_delta": [
+        "📉 Nur {delta:.1f}°C Differenz. Wir brauchen mindestens 2°C.",
+        "🌡️ Delta T zu niedrig ({delta:.1f}°C). Einschalten lohnt sich nicht.",
+        "📉 Das Wasser vom Dach ist kaum wärmer. Lohnt sich nicht."
+      ],
+      "off_low_sun": [
+        "🌅 Sonne zu tief ({elevation:.0f}°). Unzureichende Strahlung.",
+        "🌇 Sonnenuntergang naht. Nicht mehr genug Strahlung.",
+        "🌅 Sonne tief am Horizont. Besser morgen."
+      ],
+      "off_low_uv": [
+        "📉 UV zu niedrig ({uv}). Nicht genug Strahlung.",
+        "🌫️ Sonnenstrahlung unzureichend (UV={uv})."
+      ],
+      "warmup": [
+        "🏋️ System in der Lernphase. Verwende Sicherheitsregeln.",
+        "📚 Lerne Muster. Vorerst konservative Entscheidung."
+      ]
+    }
+  }
+}

@@ -1,137 +1,60 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "SolarPool AI - Cartographie des Entités",
-                "description": "Configurez les entités que votre système utilisera. Les capteurs optionnels vous permettent d'utiliser des capteurs spécifiques au lieu des attributs météo.",
-                "data": {
-                    "pump_entity_id": "Interrupteur de la Pompe de Piscine",
-                    "pool_sensor_id": "Capteur de Température de Piscine",
-                    "return_sensor_id": "Capteur de Température de Retour (des collecteurs)",
-                    "weather_entity_id": "Entité Météo",
-                    "uv_sensor_id": "Capteur d'Indice UV (optionnel)",
-                    "cloud_coverage_sensor_id": "Capteur de Couverture Nuageuse (optionnel)",
-                    "wind_sensor_id": "Capteur de Vitesse du Vent (optionnel)",
-                    "ambient_temp_sensor_id": "Capteur de Température Ambiante (optionnel)"
-                },
-                "data_description": {
-                    "uv_sensor_id": "Utilisez un capteur UV spécifique (ex: de PirateWeather) au lieu de l'attribut météo",
-                    "cloud_coverage_sensor_id": "% de nuages pour calculer l'UV effectif (UV × (1 - nuages/100))",
-                    "wind_sensor_id": "Utilisez un capteur de vent spécifique au lieu de l'attribut météo",
-                    "ambient_temp_sensor_id": "Utilisez un capteur de température spécifique au lieu de l'attribut météo"
-                }
-            },
-            "parameters": {
-                "title": "SolarPool AI - Paramètres",
-                "description": "Ajustez les paramètres du système selon votre installation.",
-                "data": {
-                    "language": "Langue",
-                    "sweep_duration": "Durée Maximale de Balayage",
-                    "max_temp": "Température Maximale de Piscine",
-                    "scan_interval": "Intervalle de Cycles"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "title": "SolarPool AI - Options",
-                "description": "Modifiez les paramètres du système. Vous pouvez également configurer des capteurs optionnels.",
-                "data": {
-                    "language": "Langue",
-                    "sweep_duration": "Durée Maximale de Balayage",
-                    "max_temp": "Température Maximale de Piscine",
-                    "scan_interval": "Intervalle de Cycles",
-                    "uv_sensor_id": "Capteur d'Indice UV (optionnel)",
-                    "cloud_coverage_sensor_id": "Capteur de Couverture Nuageuse (optionnel)",
-                    "wind_sensor_id": "Capteur de Vitesse du Vent (optionnel)",
-                    "ambient_temp_sensor_id": "Capteur de Température Ambiante (optionnel)"
-                },
-                "data_description": {
-                    "uv_sensor_id": "Utilisez un capteur UV spécifique au lieu de l'attribut météo. Laissez vide pour utiliser les données météo ou l'estimation automatique.",
-                    "cloud_coverage_sensor_id": "% de nuages pour calculer l'UV effectif. Avec 80% de nuages, UV 8 devient 1.6.",
-                    "wind_sensor_id": "Utilisez un capteur de vent spécifique au lieu de l'attribut météo.",
-                    "ambient_temp_sensor_id": "Utilisez un capteur de température spécifique au lieu de l'attribut météo."
-                }
-            }
-        }
-    },
-    "solarpool": {
-        "states": {
-            "idle": "Inactif",
-            "sweeping": "Balayage",
-            "measuring": "Mesure",
-            "consulting": "Consultation",
-            "heating": "Chauffage",
-            "cooldown": "Refroidissement",
-            "error": "Erreur"
+  "config": {
+    "step": {
+      "user": {
+        "title": "SolarPool AI - Cartographie des Entités",
+        "description": "Configurez les entités que votre système utilisera. Les capteurs optionnels vous permettent d'utiliser des capteurs spécifiques au lieu des attributs météo.",
+        "data": {
+          "pump_entity_id": "Interrupteur de la Pompe de Piscine",
+          "pool_sensor_id": "Capteur de Température de Piscine",
+          "return_sensor_id": "Capteur de Température de Retour (des collecteurs)",
+          "weather_entity_id": "Entité Météo",
+          "uv_sensor_id": "Capteur d'Indice UV (optionnel)",
+          "cloud_coverage_sensor_id": "Capteur de Couverture Nuageuse (optionnel)",
+          "wind_sensor_id": "Capteur de Vitesse du Vent (optionnel)",
+          "ambient_temp_sensor_id": "Capteur de Température Ambiante (optionnel)"
         },
-        "rl_phases": {
-            "bootstrap": "Amorçage (Règles Sûres)",
-            "training": "Entraînement (Apprentissage)",
-            "production": "Production (Optimisé)"
-        },
-        "status_messages": {
-            "initializing": "Initialisation...",
-            "waiting_ha": "En attente du démarrage de Home Assistant...",
-            "sun_below_horizon": "Soleil sous l'horizon, système au repos",
-            "sun_too_low": "Soleil trop bas ({elevation:.1f}°), rayonnement insuffisant",
-            "max_temp_reached": "Temp. piscine ({temp}°C) >= Max ({max_temp}°C)",
-            "sweep_starting": "Démarrage du balayage pour la lecture des capteurs...",
-            "sweep_forced": "Démarrage du balayage forcé...",
-            "measuring_sensors": "Prise de mesures des capteurs...",
-            "consulting_ai": "Consultation de l'IA pour la décision thermique...",
-            "sensor_error": "Erreur lors de la collecte des données des capteurs",
-            "heating_complete": "Cycle de chauffage terminé",
-            "safety_override": "[Override] Delta réel ({delta:.1f}°C) insuffisant (<2.0°C)"
-        },
-        "templates": {
-            "on_optimal": [
-                "☀️ Soleil fort et vent calme. Profitons-en au maximum !",
-                "🔥 Conditions parfaites pour chauffer. On y va à fond !",
-                "💪 Le toit est rayonnant, on capture la chaleur.",
-                "☀️ Journée idéale : UV élevé, peu de vent. C'est l'heure de chauffer."
-            ],
-            "on_marginal": [
-                "🌤️ Conditions moyennes, ça vaut le coup d'essayer.",
-                "⚡ Un peu de vent, mais le soleil compense. On teste.",
-                "🌤️ Nuages partiels, mais il y a encore un gain thermique.",
-                "🤔 Pas idéal, mais ça devrait rapporter un peu."
-            ],
-            "on_learning": [
-                "🤖 Test d'une nouvelle stratégie. Je vous dirai ce qu'il en est.",
-                "🧪 Exploration de nouvelles conditions pour apprendre.",
-                "📊 Collecte de données pour améliorer les futures décisions."
-            ],
-            "off_wind": [
-                "💨 Un vent de {wind:.0f}km/h refroidit les collecteurs.",
-                "🌬️ Trop de vent ({wind:.0f}km/h). Les collecteurs perdent de la chaleur.",
-                "💨 Le vent emporte la chaleur plus vite qu'elle n'arrive."
-            ],
-            "off_clouds": [
-                "☁️ Trop nuageux. La pompe dépenserait plus qu'on ne gagne.",
-                "🌧️ Journée grise. Pas de soleil, pas de magie.",
-                "☁️ Ciel couvert. Mieux vaut attendre que ça se dégage."
-            ],
-            "off_delta": [
-                "📉 Seulement {delta:.1f}°C de différence. Il faut au moins 2°C.",
-                "🌡️ Delta T trop bas ({delta:.1f}°C). Pas rentable d'allumer.",
-                "📉 L'eau du toit est à peine plus chaude. Ça n'en vaut pas la peine."
-            ],
-            "off_low_sun": [
-                "🌅 Soleil trop bas ({elevation:.0f}°). Rayonnement insuffisant.",
-                "🌇 Le soleil se couche. Plus assez de rayonnement.",
-                "🌅 Soleil bas sur l'horizon. À demain."
-            ],
-            "off_low_uv": [
-                "📉 UV trop bas ({uv}). Pas assez de rayonnement.",
-                "🌫️ Rayonnement solaire insuffisant (UV={uv})."
-            ],
-            "warmup": [
-                "🏋️ Système en phase d'apprentissage. Utilisation de règles sûres.",
-                "📚 Apprentissage des modèles. Décision conservatrice pour l'instant."
-            ]
+        "data_description": {
+          "uv_sensor_id": "Utilisez un capteur UV spécifique (ex: de PirateWeather) au lieu de l'attribut météo",
+          "cloud_coverage_sensor_id": "% de nuages pour calculer l'UV effectif (UV × (1 - nuages/100))",
+          "wind_sensor_id": "Utilisez un capteur de vent spécifique au lieu de l'attribut météo",
+          "ambient_temp_sensor_id": "Utilisez un capteur de température spécifique au lieu de l'attribut météo"
         }
+      },
+      "parameters": {
+        "title": "SolarPool AI - Paramètres",
+        "description": "Ajustez les paramètres du système selon votre installation.",
+        "data": {
+          "language": "Langue",
+          "sweep_duration": "Durée Maximale de Balayage",
+          "max_temp": "Température Maximale de Piscine",
+          "scan_interval": "Intervalle de Cycles"
+        }
+      }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SolarPool AI - Options",
+        "description": "Modifiez les paramètres du système. Vous pouvez également configurer des capteurs optionnels.",
+        "data": {
+          "language": "Langue",
+          "sweep_duration": "Durée Maximale de Balayage",
+          "max_temp": "Température Maximale de Piscine",
+          "scan_interval": "Intervalle de Cycles",
+          "uv_sensor_id": "Capteur d'Indice UV (optionnel)",
+          "cloud_coverage_sensor_id": "Capteur de Couverture Nuageuse (optionnel)",
+          "wind_sensor_id": "Capteur de Vitesse du Vent (optionnel)",
+          "ambient_temp_sensor_id": "Capteur de Température Ambiante (optionnel)"
+        },
+        "data_description": {
+          "uv_sensor_id": "Utilisez un capteur UV spécifique au lieu de l'attribut météo. Laissez vide pour utiliser les données météo ou l'estimation automatique.",
+          "cloud_coverage_sensor_id": "% de nuages pour calculer l'UV effectif. Avec 80% de nuages, UV 8 devient 1.6.",
+          "wind_sensor_id": "Utilisez un capteur de vent spécifique au lieu de l'attribut météo.",
+          "ambient_temp_sensor_id": "Utilisez un capteur de température spécifique au lieu de l'attribut météo."
+        }
+      }
+    }
+  }
 }

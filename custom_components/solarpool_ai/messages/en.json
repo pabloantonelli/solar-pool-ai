@@ -1,0 +1,79 @@
+{
+  "solarpool": {
+    "states": {
+      "idle": "Idle",
+      "sweeping": "Sweeping",
+      "measuring": "Measuring",
+      "consulting": "Consulting",
+      "heating": "Heating",
+      "cooldown": "Cooling down",
+      "error": "Error"
+    },
+    "rl_phases": {
+      "bootstrap": "Bootstrap (Safe Rules)",
+      "training": "Training (Learning)",
+      "production": "Production (Optimized)"
+    },
+    "status_messages": {
+      "initializing": "Initializing...",
+      "waiting_ha": "Waiting for Home Assistant to start...",
+      "sun_below_horizon": "Sun below horizon, system resting",
+      "sun_too_low": "Sun too low ({elevation:.1f}°), insufficient radiation",
+      "max_temp_reached": "Pool temp ({temp}°C) >= Max ({max_temp}°C)",
+      "sweep_starting": "Starting sweep for sensor readings...",
+      "sweep_forced": "Starting forced sweep...",
+      "measuring_sensors": "Taking sensor measurements...",
+      "consulting_ai": "Consulting AI for thermal decision...",
+      "sensor_error": "Error gathering sensor data",
+      "heating_complete": "Heating cycle completed",
+      "safety_override": "[Override] Actual delta ({delta:.1f}°C) insufficient (<2.0°C)"
+    },
+    "templates": {
+      "on_optimal": [
+        "☀️ Strong sun, calm wind. Let's heat up!",
+        "🔥 Perfect conditions. Going full power!",
+        "💪 Roof is radiating. Capturing the heat.",
+        "☀️ Ideal day: high UV, low wind. Heating time."
+      ],
+      "on_marginal": [
+        "🌤️ Fair conditions, worth a try.",
+        "⚡ Some wind, but sun compensates. Let's try.",
+        "🌤️ Partial clouds, but still some thermal gain.",
+        "🤔 Not ideal, but should get some gain."
+      ],
+      "on_learning": [
+        "🤖 Testing new strategy. I'll report back.",
+        "🧪 Exploring new conditions to learn.",
+        "📊 Gathering data to improve future decisions."
+      ],
+      "off_wind": [
+        "💨 {wind:.0f}km/h wind cools the collectors.",
+        "🌬️ Too much wind ({wind:.0f}km/h). Heat escapes.",
+        "💨 Wind carries heat away faster than it comes in."
+      ],
+      "off_clouds": [
+        "☁️ Too cloudy. Pump would waste more than we gain.",
+        "🌧️ Gray day. No sun, no magic.",
+        "☁️ Sky covered. Better wait for clear skies."
+      ],
+      "off_delta": [
+        "📉 Only {delta:.1f}°C difference. Need at least 2°C.",
+        "🌡️ Delta T too low ({delta:.1f}°C). Not worth it.",
+        "📉 Roof water barely warmer. Not worth running."
+      ],
+      "off_low_sun": [
+        "🌅 Sun too low ({elevation:.0f}°). Insufficient radiation.",
+        "🌇 Sunset approaching. Not enough radiation left.",
+        "🌅 Sun low on horizon. Better tomorrow."
+      ],
+      "off_low_uv": [
+        "📉 UV too low ({uv}). Not enough radiation.",
+        "🌫️ Solar radiation insufficient (UV={uv})."
+      ],
+      "warmup": [
+        "🏋️ System in learning phase. Using safe rules.",
+        "📚 Learning patterns. Conservative decision for now."
+      ]
+    }
+  }
+}

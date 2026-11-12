@@ -1,0 +1,79 @@
+{
+  "solarpool": {
+    "states": {
+      "idle": "Inactif",
+      "sweeping": "Balayage",
+      "measuring": "Mesure",
+      "consulting": "Consultation",
+      "heating": "Chauffage",
+      "cooldown": "Refroidissement",
+      "error": "Erreur"
+    },
+    "rl_phases": {
+      "bootstrap": "Amorçage (Règles Sûres)",
+      "training": "Entraînement (Apprentissage)",
+      "production": "Production (Optimisé)"
+    },
+    "status_messages": {
+      "initializing": "Initialisation...",
+      "waiting_ha": "En attente du démarrage de Home Assistant...",
+      "sun_below_horizon": "Soleil sous l'horizon, système au repos",
+      "sun_too_low": "Soleil trop bas ({elevation:.1f}°), rayonnement insuffisant",
+      "max_temp_reached": "Temp. piscine ({temp}°C) >= Max ({max_temp}°C)",
+      "sweep_starting": "Démarrage du balayage pour la lecture des capteurs...",
+      "sweep_forced": "Démarrage du balayage forcé...",
+      "measuring_sensors": "Prise de mesures des capteurs...",
+      "consulting_ai": "Consultation de l'IA pour la décision thermique...",
+      "sensor_error": "Erreur lors de la collecte des données des capteurs",
+      "heating_complete": "Cycle de chauffage terminé",
+      "safety_override": "[Override] Delta réel ({delta:.1f}°C) insuffisant (<2.0°C)"
+    },
+    "templates": {
+      "on_optimal": [
+        "☀️ Soleil fort et vent calme. Profitons-en au maximum !",
+        "🔥 Conditions parfaites pour chauffer. On y va à fond !",
+        "💪 Le toit est rayonnant, on capture la chaleur.",
+        "☀️ Journée idéale : UV élevé, peu de vent. C'est l'heure de chauffer."
+      ],
+      "on_marginal": [
+        "🌤️ Conditions moyennes, ça vaut le coup d'essayer.",
+        "⚡ Un peu de vent, mais le soleil compense. On teste.",
+        "🌤️ Nuages partiels, mais il y a encore un gain thermique.",
+        "🤔 Pas idéal, mais ça devrait rapporter un peu."
+      ],
+      "on_learning": [
+        "🤖 Test d'une nouvelle stratégie. Je vous dirai ce qu'il en est.",
+        "🧪 Exploration de nouvelles conditions pour apprendre.",
+        "📊 Collecte de données pour améliorer les futures décisions."
+      ],
+      "off_wind": [
+        "💨 Un vent de {wind:.0f}km/h refroidit les collecteurs.",
+        "🌬️ Trop de vent ({wind:.0f}km/h). Les collecteurs perdent de la chaleur.",
+        "💨 Le vent emporte la chaleur plus vite qu'elle n'arrive."
+      ],
+      "off_clouds": [
+        "☁️ Trop nuageux. La pompe dépenserait plus qu'on ne gagne.",
+        "🌧️ Journée grise. Pas de soleil, pas de magie.",
+        "☁️ Ciel couvert. Mieux vaut attendre que ça se dégage."
+      ],
+      "off_delta": [
+        "📉 Seulement {delta:.1f}°C de différence. Il faut au moins 2°C.",
+        "🌡️ Delta T trop bas ({delta:.1f}°C). Pas rentable d'allumer.",
+        "📉 L'eau du toit est à peine plus chaude. Ça n'en vaut pas la peine."
+      ],
+      "off_low_sun": [
+        "🌅 Soleil trop bas ({elevation:.0f}°). Rayonnement insuffisant.",
+        "🌇 Le soleil se couche. Plus assez de rayonnement.",
+        "🌅 Soleil bas sur l'horizon. À demain."
+      ],
+      "off_low_uv": [
+        "📉 UV trop bas ({uv}). Pas assez de rayonnement.",
+        "🌫️ Rayonnement solaire insuffisant (UV={uv})."
+      ],
+      "warmup": [
+        "🏋️ Système en phase d'apprentissage. Utilisation de règles sûres.",
+        "📚 Apprentissage des modèles. Décision conservatrice pour l'instant."
+      ]
+    }
+  }
+}

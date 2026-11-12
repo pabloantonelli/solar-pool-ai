@@ -1,7 +1,7 @@
 """Translations and internationalization for SolarPool AI.
 
-This module reads translations from the JSON files in the translations/ folder
-following the Home Assistant standard format.
+This module reads translations from the JSON files in the messages/ folder
+(kept separate from translations/, which Home Assistant validates strictly).
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ _TRANSLATIONS_CACHE: dict[str, dict[str, Any]] = {}
 
 def _get_translations_path() -> Path:
     """Get the path to the translations directory."""
-    return Path(__file__).parent / "translations"
+    return Path(__file__).parent / "messages"
 
 
 def _load_translations(language: str) -> dict[str, Any]:

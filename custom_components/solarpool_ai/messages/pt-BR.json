@@ -7,7 +7,10 @@
       "consulting": "Consultando",
       "heating": "Aquecendo",
       "cooldown": "Resfriando",
-      "error": "Erro"
+      "error": "Erro",
+      "waiting": "Aguardando",
+      "cooling": "Resfriando (noite)",
+      "frost": "Anticongelamento"
     },
     "rl_phases": {
       "bootstrap": "Bootstrap (Regras Seguras)",
@@ -23,10 +26,19 @@
       "sweep_starting": "Iniciando limpeza para leitura dos sensores...",
       "sweep_forced": "Iniciando limpeza forçada...",
       "measuring_sensors": "Coletando dados dos sensores...",
-      "consulting_ai": "Consultando IA para decisão térmica...",
       "sensor_error": "Erro ao coletar dados dos sensores",
       "heating_complete": "Ciclo de aquecimento concluído",
-      "safety_override": "[Substituir] Delta real ({delta:.1f}°C) insuficiente (<2.0°C)"
+      "resumed_heating": "Retomando aquecimento após reinício",
+      "master_off": "Automação desativada (Master desligado)",
+      "mode_vacation": "Modo férias: sem aquecer (proteções ativas)",
+      "heating_stopped_delta": "ΔT caiu para {delta:.1f}°C (< {delta_off:.1f}°C). Fim do aquecimento",
+      "pump_protect": "(Protegendo a bomba: desliga em {minutes} min)",
+      "pump_external_off": "A bomba foi desligada externamente. Retomando no próximo ciclo",
+      "frost_active": "❄️ Anticongelamento: ambiente {temp:.1f}°C, circulando água",
+      "frost_pause": "❄️ Anticongelamento em pausa ({temp:.1f}°C), próxima circulação em 20 min",
+      "frost_complete": "Risco de congelamento superado",
+      "cooling_active": "🌙 Resfriamento noturno: piscina {temp:.1f}°C > máx {max_temp:.1f}°C",
+      "cooling_complete": "Resfriamento noturno concluído"
     },
     "templates": {
       "on_optimal": [
@@ -57,9 +69,9 @@
         "☁️ Céu coberto. Melhor esperar limpar."
       ],
       "off_delta": [
-        "📉 Apenas {delta:.1f}°C de diferença. Precisamos de pelo menos 2°C.",
-        "🌡️ Delta T muito baixo ({delta:.1f}°C). Não vale a pena ligar.",
-        "📉 A água do telhado mal está mais quente. Não compensa."
+        "📉 Apenas {delta:.1f}°C de diferença. Precisamos de pelo menos {delta_on:.1f}°C.",
+        "🌡️ Delta T muito baixo ({delta:.1f}°C). Não compensa ligar.",
+        "📉 A água do telhado mal está mais quente. Não vale."
       ],
       "off_low_sun": [
         "🌅 Sol muito baixo ({elevation:.0f}°). Radiação insuficiente.",
@@ -73,7 +85,19 @@
       "warmup": [
         "🏋️ Sistema em fase de aprendizado. Usando regras seguras.",
         "📚 Aprendendo padrões. Decisão conservadora por enquanto."
+      ],
+      "wait": [
+        "⏳ Condições fracas (UV {uv}, vento {wind:.0f}km/h). Aguardando para economizar bomba.",
+        "⏳ Com este clima raramente compensa varrer. Tento no próximo ciclo.",
+        "⏳ Ganho esperado baixo ({gain:.1f}°C/h). Pulando a varredura."
       ]
+    },
+    "problems": {
+      "pool_sensor_unavailable": "Sensor de temperatura da piscina indisponível há mais de 15 min",
+      "return_sensor_unavailable": "Sensor de temperatura de retorno indisponível há mais de 15 min",
+      "pump_not_responding": "A bomba não respondeu ao último comando",
+      "return_sensor_stuck": "O sensor de retorno não muda com a bomba ligada (sensor travado ou ar no circuito?)",
+      "collectors_low_yield": "Os coletores rendem pouco com sol forte (válvula fechada, ar ou sujeira?)"
     }
   }
 }

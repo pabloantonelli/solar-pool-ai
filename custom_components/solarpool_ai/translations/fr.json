@@ -56,5 +56,46 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "delta_t": {
+        "name": "ΔT capteurs"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problème"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Automatique",
+          "boost": "Boost (chauffe maximale)",
+          "vacation": "Vacances"
+        }
+      }
+    },
+    "switch": {
+      "night_cooling": {
+        "name": "Refroidissement nocturne"
+      },
+      "frost_protection": {
+        "name": "Hors-gel"
+      }
+    },
+    "number": {
+      "delta_on": {
+        "name": "ΔT de démarrage"
+      },
+      "delta_off": {
+        "name": "ΔT d'arrêt"
+      },
+      "frost_threshold": {
+        "name": "Seuil hors-gel"
+      }
+    }
   }
 }

@@ -35,10 +35,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTIONAL_SENSOR_KEYS = (
+    CONF_UV_SENSOR_ID,
+    CONF_CLOUD_COVERAGE_SENSOR_ID,
+    CONF_WIND_SENSOR_ID,
+    CONF_AMBIENT_TEMP_SENSOR_ID,
+)
+
 class SolarPoolConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SolarPool AI."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -160,7 +168,13 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Merge: conservar valores escritos por entidades number/switch (delta_on, antiheladas, etc.)
+            # y guardar None explícito para sensores opcionales que el usuario borró.
+            new_options = {**self.config_entry.options, **user_input}
+            for key in OPTIONAL_SENSOR_KEYS:
+                if key not in user_input:
+                    new_options[key] = None
+            return self.async_create_entry(title="", data=new_options)
 
         try:
             # Get current values with fallback defaults
@@ -255,42 +269,24 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
                 ),
             }
             
-            # Add optional sensor fields
-            if uv_sensor:
-                schema_dict[vol.Optional(CONF_UV_SENSOR_ID, default=uv_sensor)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
+            # Sensores opcionales: suggested_value (no default) para que el usuario pueda borrarlos
+            for key, current, device_class in (
+                (CONF_UV_SENSOR_ID, uv_sensor, None),
+                (CONF_CLOUD_COVERAGE_SENSOR_ID, cloud_sensor, None),
+                (CONF_WIND_SENSOR_ID, wind_sensor, None),
+                (CONF_AMBIENT_TEMP_SENSOR_ID, ambient_temp_sensor, "temperature"),
+            ):
+                marker = (
+                    vol.Optional(key, description={"suggested_value": current})
+                    if current
+                    else vol.Optional(key)
                 )
-            else:
-                schema_dict[vol.Optional(CONF_UV_SENSOR_ID)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
+                selector_config = (
+                    selector.EntitySelectorConfig(domain="sensor", device_class=device_class)
+                    if device_class
+                    else selector.EntitySelectorConfig(domain="sensor")
                 )
-            
-            if cloud_sensor:
-                schema_dict[vol.Optional(CONF_CLOUD_COVERAGE_SENSOR_ID, default=cloud_sensor)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
-                )
-            else:
-                schema_dict[vol.Optional(CONF_CLOUD_COVERAGE_SENSOR_ID)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
-                )
-            
-            if wind_sensor:
-                schema_dict[vol.Optional(CONF_WIND_SENSOR_ID, default=wind_sensor)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
-                )
-            else:
-                schema_dict[vol.Optional(CONF_WIND_SENSOR_ID)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
-                )
-            
-            if ambient_temp_sensor:
-                schema_dict[vol.Optional(CONF_AMBIENT_TEMP_SENSOR_ID, default=ambient_temp_sensor)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
-                )
-            else:
-                schema_dict[vol.Optional(CONF_AMBIENT_TEMP_SENSOR_ID)] = selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
-                )
+                schema_dict[marker] = selector.EntitySelector(selector_config)
 
             return self.async_show_form(
                 step_id="init",

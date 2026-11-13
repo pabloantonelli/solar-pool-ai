@@ -7,7 +7,10 @@
       "consulting": "Consulting",
       "heating": "Heating",
       "cooldown": "Cooling down",
-      "error": "Error"
+      "error": "Error",
+      "waiting": "Waiting",
+      "cooling": "Night cooling",
+      "frost": "Frost protection"
     },
     "rl_phases": {
       "bootstrap": "Bootstrap (Safe Rules)",
@@ -23,10 +26,19 @@
       "sweep_starting": "Starting sweep for sensor readings...",
       "sweep_forced": "Starting forced sweep...",
       "measuring_sensors": "Taking sensor measurements...",
-      "consulting_ai": "Consulting AI for thermal decision...",
       "sensor_error": "Error gathering sensor data",
       "heating_complete": "Heating cycle completed",
-      "safety_override": "[Override] Actual delta ({delta:.1f}°C) insufficient (<2.0°C)"
+      "resumed_heating": "Resuming heating after restart",
+      "master_off": "Automation disabled (Master off)",
+      "mode_vacation": "Vacation mode: not heating (protections active)",
+      "heating_stopped_delta": "ΔT dropped to {delta:.1f}°C (< {delta_off:.1f}°C). Heating finished",
+      "pump_protect": "(Protecting pump: turning off in {minutes} min)",
+      "pump_external_off": "Pump was turned off externally. Resuming next cycle",
+      "frost_active": "❄️ Frost protection: ambient {temp:.1f}°C, circulating water",
+      "frost_pause": "❄️ Frost protection paused ({temp:.1f}°C), next run in 20 min",
+      "frost_complete": "Frost risk is over",
+      "cooling_active": "🌙 Night cooling: pool {temp:.1f}°C > max {max_temp:.1f}°C",
+      "cooling_complete": "Night cooling finished"
     },
     "templates": {
       "on_optimal": [
@@ -57,7 +69,7 @@
         "☁️ Sky covered. Better wait for clear skies."
       ],
       "off_delta": [
-        "📉 Only {delta:.1f}°C difference. Need at least 2°C.",
+        "📉 Only {delta:.1f}°C difference. Need at least {delta_on:.1f}°C.",
         "🌡️ Delta T too low ({delta:.1f}°C). Not worth it.",
         "📉 Roof water barely warmer. Not worth running."
       ],
@@ -73,7 +85,19 @@
       "warmup": [
         "🏋️ System in learning phase. Using safe rules.",
         "📚 Learning patterns. Conservative decision for now."
+      ],
+      "wait": [
+        "⏳ Weak conditions (UV {uv}, wind {wind:.0f}km/h). Waiting to save pump energy.",
+        "⏳ Sweeping rarely pays off in this weather. Trying next cycle.",
+        "⏳ Low expected gain ({gain:.1f}°C/h). Skipping the sweep."
       ]
+    },
+    "problems": {
+      "pool_sensor_unavailable": "Pool temperature sensor unavailable for more than 15 min",
+      "return_sensor_unavailable": "Return temperature sensor unavailable for more than 15 min",
+      "pump_not_responding": "The pump did not respond to the last command",
+      "return_sensor_stuck": "Return sensor does not change while the pump runs (stuck sensor or air in the loop?)",
+      "collectors_low_yield": "Collectors are underperforming in strong sun (closed valve, air or dirt?)"
     }
   }
 }

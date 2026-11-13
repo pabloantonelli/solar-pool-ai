@@ -7,7 +7,10 @@
       "consulting": "Consultando",
       "heating": "Calentando",
       "cooldown": "Enfriando",
-      "error": "Error"
+      "error": "Error",
+      "waiting": "Esperando",
+      "cooling": "Enfriando (noche)",
+      "frost": "Antiheladas"
     },
     "rl_phases": {
       "bootstrap": "Bootstrap (Reglas Seguras)",
@@ -23,10 +26,19 @@
       "sweep_starting": "Iniciando barrido para lectura de sensores...",
       "sweep_forced": "Iniciando barrido forzado...",
       "measuring_sensors": "Tomando medidas de sensores...",
-      "consulting_ai": "Consultando IA para decisión térmica...",
       "sensor_error": "Error al recopilar datos de los sensores",
       "heating_complete": "Ciclo de calentamiento completado",
-      "safety_override": "[Anulación] Delta real ({delta:.1f}°C) insuficiente (<2.0°C)"
+      "resumed_heating": "Retomando calentamiento después del reinicio",
+      "master_off": "Automatización desactivada (Master apagado)",
+      "mode_vacation": "Modo vacaciones: sin calentar (protecciones activas)",
+      "heating_stopped_delta": "ΔT bajó a {delta:.1f}°C (< {delta_off:.1f}°C). Fin del calentamiento",
+      "pump_protect": "(Protegiendo bomba: se apaga en {minutes} min)",
+      "pump_external_off": "La bomba se apagó desde afuera. Se retoma en el próximo ciclo",
+      "frost_active": "❄️ Antiheladas: ambiente {temp:.1f}°C, circulando agua",
+      "frost_pause": "❄️ Antiheladas en pausa ({temp:.1f}°C), próxima circulación en 20 min",
+      "frost_complete": "Riesgo de helada superado",
+      "cooling_active": "🌙 Enfriando por la noche: pileta {temp:.1f}°C > máx {max_temp:.1f}°C",
+      "cooling_complete": "Enfriamiento nocturno terminado"
     },
     "templates": {
       "on_optimal": [
@@ -57,7 +69,7 @@
         "☁️ Cielo cubierto. Mejor esperar a que despeje."
       ],
       "off_delta": [
-        "📉 Solo {delta:.1f}°C de diferencia. Necesitamos al menos 2°C.",
+        "📉 Solo {delta:.1f}°C de diferencia. Necesitamos al menos {delta_on:.1f}°C.",
         "🌡️ Delta T muy bajo ({delta:.1f}°C). No rinde encender.",
         "📉 El agua del techo apenas está más caliente. No vale."
       ],
@@ -73,7 +85,19 @@
       "warmup": [
         "🏋️ Sistema en fase de aprendizaje. Usando reglas seguras.",
         "📚 Aprendiendo patrones. Decisión conservadora por ahora."
+      ],
+      "wait": [
+        "⏳ Condiciones flojas (UV {uv}, viento {wind:.0f}km/h). Espero para no gastar bomba.",
+        "⏳ Con este clima rara vez rinde barrer. Pruebo en el próximo ciclo.",
+        "⏳ Ganancia esperada baja ({gain:.1f}°C/h). Ahorro el barrido."
       ]
+    },
+    "problems": {
+      "pool_sensor_unavailable": "El sensor de temperatura de la pileta no responde hace más de 15 min",
+      "return_sensor_unavailable": "El sensor de temperatura de retorno no responde hace más de 15 min",
+      "pump_not_responding": "La bomba no respondió al último comando",
+      "return_sensor_stuck": "El sensor de retorno no cambia aunque la bomba circula (¿sensor trabado o aire en el circuito?)",
+      "collectors_low_yield": "Los colectores rinden poco con mucho sol (¿válvula cerrada, aire o suciedad?)"
     }
   }
 }

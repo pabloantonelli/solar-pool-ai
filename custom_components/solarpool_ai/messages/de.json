@@ -7,7 +7,10 @@
       "consulting": "Beraten",
       "heating": "Heizen",
       "cooldown": "Abkühlen",
-      "error": "Fehler"
+      "error": "Fehler",
+      "waiting": "Wartend",
+      "cooling": "Nachtkühlung",
+      "frost": "Frostschutz"
     },
     "rl_phases": {
       "bootstrap": "Initialisierung (Sicherheitsregeln)",
@@ -23,10 +26,19 @@
       "sweep_starting": "Starte Spülvorgang für Sensormessungen...",
       "sweep_forced": "Starte erzwungenen Spülvorgang...",
       "measuring_sensors": "Sensormessungen werden durchgeführt...",
-      "consulting_ai": "KI wird für thermische Entscheidung konsultiert...",
       "sensor_error": "Fehler beim Erfassen der Sensordaten",
       "heating_complete": "Heizzyklus abgeschlossen",
-      "safety_override": "[Override] Aktuelles Delta ({delta:.1f}°C) unzureichend (<2.0°C)"
+      "resumed_heating": "Heizen nach Neustart fortgesetzt",
+      "master_off": "Automatisierung deaktiviert (Master aus)",
+      "mode_vacation": "Urlaubsmodus: kein Heizen (Schutzfunktionen aktiv)",
+      "heating_stopped_delta": "ΔT auf {delta:.1f}°C gefallen (< {delta_off:.1f}°C). Heizen beendet",
+      "pump_protect": "(Pumpenschutz: Abschaltung in {minutes} Min)",
+      "pump_external_off": "Pumpe wurde extern ausgeschaltet. Weiter im nächsten Zyklus",
+      "frost_active": "❄️ Frostschutz: Umgebung {temp:.1f}°C, Wasser zirkuliert",
+      "frost_pause": "❄️ Frostschutz pausiert ({temp:.1f}°C), nächste Zirkulation in 20 Min",
+      "frost_complete": "Frostgefahr vorbei",
+      "cooling_active": "🌙 Nachtkühlung: Pool {temp:.1f}°C > Max {max_temp:.1f}°C",
+      "cooling_complete": "Nachtkühlung beendet"
     },
     "templates": {
       "on_optimal": [
@@ -57,9 +69,9 @@
         "☁️ Himmel bedeckt. Besser warten, bis es aufklart."
       ],
       "off_delta": [
-        "📉 Nur {delta:.1f}°C Differenz. Wir brauchen mindestens 2°C.",
-        "🌡️ Delta T zu niedrig ({delta:.1f}°C). Einschalten lohnt sich nicht.",
-        "📉 Das Wasser vom Dach ist kaum wärmer. Lohnt sich nicht."
+        "📉 Nur {delta:.1f}°C Differenz. Wir brauchen mindestens {delta_on:.1f}°C.",
+        "🌡️ Delta T zu niedrig ({delta:.1f}°C). Lohnt sich nicht.",
+        "📉 Das Dachwasser ist kaum wärmer. Lohnt nicht."
       ],
       "off_low_sun": [
         "🌅 Sonne zu tief ({elevation:.0f}°). Unzureichende Strahlung.",
@@ -73,7 +85,19 @@
       "warmup": [
         "🏋️ System in der Lernphase. Verwende Sicherheitsregeln.",
         "📚 Lerne Muster. Vorerst konservative Entscheidung."
+      ],
+      "wait": [
+        "⏳ Schwache Bedingungen (UV {uv}, Wind {wind:.0f}km/h). Warte, um Pumpenenergie zu sparen.",
+        "⏳ Bei diesem Wetter lohnt sich ein Spülen selten. Nächster Zyklus.",
+        "⏳ Geringer erwarteter Gewinn ({gain:.1f}°C/h). Spülen ausgelassen."
       ]
+    },
+    "problems": {
+      "pool_sensor_unavailable": "Pooltemperatursensor seit über 15 Min nicht verfügbar",
+      "return_sensor_unavailable": "Rücklauftemperatursensor seit über 15 Min nicht verfügbar",
+      "pump_not_responding": "Die Pumpe hat auf den letzten Befehl nicht reagiert",
+      "return_sensor_stuck": "Rücklaufsensor ändert sich bei laufender Pumpe nicht (Sensor hängt oder Luft im Kreislauf?)",
+      "collectors_low_yield": "Kollektoren liefern bei starker Sonne wenig (Ventil zu, Luft oder Schmutz?)"
     }
   }
 }

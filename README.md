@@ -7,7 +7,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/v/release/pabloantonelli/solar-pool-ai)](https://github.com/pabloantonelli/solar-pool-ai/releases)
 
-SolarPool AI es una integración para Home Assistant que automatiza la climatización de piscinas utilizando colectores solares y **Reinforcement Learning (Q-Learning)** para tomar decisiones óptimas sin costos de APIs externas.
+SolarPool AI es una integración para Home Assistant que automatiza la climatización de piscinas con colectores solares. Calienta midiendo el **ΔT real de los colectores** y usa **aprendizaje por refuerzo local** para saber cuándo vale la pena prender la bomba a medir. Sin APIs externas.
 
 ## 🚀 Características
 
@@ -22,10 +22,14 @@ SolarPool AI es una integración para Home Assistant que automatiza la climatiza
 - **💰 Cero Costos**: Sin gastos en APIs de IA (anteriormente $6-60/mes)
 - **⚡ Respuestas Instantáneas**: Decisiones en microsegundos vs 1-3 segundos con LLMs
 - **🔒 100% Offline**: Funciona sin conexión a internet
-- **🛡️ Seguridad Multicapa**: 
-  - Protección de delta térmico mínimo (2.0°C)
-  - Límites de duración (20-90 min)
-  - Warm-up conservador (primeros 50 ciclos)
+- **🔥 Control por ΔT con histéresis (v0.1.0)**: calienta mientras el agua vuelve del techo al menos `ΔT para apagar` más caliente; sin duraciones fijas
+- **🎛️ Modos (v0.1.0)**: Automático, Boost (calentar a full hasta el atardecer) y Vacaciones
+- **❄️ Antiheladas y 🌙 Enfriamiento nocturno (v0.1.0)**: protecciones opcionales que usan los colectores
+- **🚨 Detección de problemas (v0.1.0)**: sensores caídos, bomba que no responde, retorno trabado o colectores rindiendo poco
+- **🛡️ Seguridad Multicapa**:
+  - La bomba es compartida con el filtrado: SolarPool nunca apaga una bomba que no prendió
+  - Si Home Assistant se reinicia mientras calienta, retoma o apaga la bomba (no queda prendida)
+  - Tiempo mínimo de bomba (10 min) y corte por temperatura máxima
   - Apagado automático al atardecer
 
 ## 🏗️ Arquitectura
@@ -35,30 +39,26 @@ flowchart LR
     subgraph Sensores
         P[🌡️ Temp Piscina]
         R[🌡️ Temp Retorno]
-        W[🌤️ Clima]
-        UV[☀️ UV Index]
+        W[🌤️ Clima / UV / Viento]
     end
-    
-    subgraph "RL Agent"
-        D[Discretizar Estado]
-        Q[Q-Table 144×5]
-        A[Seleccionar Acción]
+
+    subgraph "Agente RL (cada 10 min)"
+        D[Estado: UV × viento × sol × hora]
+        Q[¿Vale la pena barrer?]
     end
-    
-    subgraph "Templates"
-        T[🗣️ Explicaciones]
+
+    subgraph "Control por ΔT (cada 60 s)"
+        S[Barrido]
+        H[Calentar mientras ΔT ≥ umbral]
     end
-    
-    Sensores --> D --> Q --> A
-    A --> T
-    
-    subgraph "Feedback"
-        RW[📊 Calcular Recompensa]
-        UP[🔄 Actualizar Q-Table]
-    end
-    
-    A --> RW --> UP --> Q
+
+    W --> D --> Q -->|SWEEP| S
+    P --> S
+    R --> S --> H
+    H -->|ganancia real| RW[📊 Recompensa] --> Q
 ```
+
+> Detalle técnico completo en [`CLAUDE.md`](CLAUDE.md).
 
 ## 🛠️ Instalación mediante HACS
 
@@ -100,72 +100,66 @@ Podés mapear sensores específicos en vez de usar los atributos del clima:
 
 ## 📊 Entidades Expuestas
 
-### Sensores de Operación (Principales)
+### Operación (Principales)
 | Entidad | Descripción |
 |---------|-------------|
-| `sensor.solarpool_status` | Estado actual traducido |
+| `sensor.solarpool_status` | Estado actual traducido (atributos: modo, última sesión, umbrales) |
 | `sensor.solarpool_reasoning` | **Explicación narrativa** de la decisión actual |
-| `sensor.solarpool_daily_gain` | **Ganancia acumulada hoy** (°C) |
+| `sensor.solarpool_total_daily_gain` | **Ganancia acumulada hoy** (°C) |
+| `sensor.solarpool_ai_collector_dt` / `..._dt_colectores` | **ΔT colectores** (retorno − pileta) medido con la bomba en marcha |
 | `sensor.solarpool_next_run` | Próxima evaluación automática |
-| `sensor.solarpool_expected_gain` | Ganancia térmica esperada en el ciclo (°C) |
+| `sensor.solarpool_expected_gain` | Ganancia esperada por hora de calentamiento (aprendida) |
+| `select.solarpool_ai_modo` | Modo: Automático / Boost / Vacaciones |
+| `binary_sensor.solarpool_ai_problema` | ON si hay un problema (atributo `reasons` con el detalle) |
+| `switch.solarpool_master` | Habilitar/Deshabilitar toda la automatización (incluye protecciones) |
 
 ### Parámetros (Categoría: Configuración)
 | Entidad | Descripción | Rango |
 |---------|-------------|-------|
-| `number.solarpool_temperatura_maxima` | Temperatura máxima del agua | 20-40°C |
-| `number.solarpool_barrido_maximo` | Timeout de barrido (Análisis de Ventana) | 60-600s |
-| `number.solarpool_intervalo_de_consulta` | Frecuencia de evaluación | 5-120min |
-| `switch.solarpool_master` | Habilitar/Deshabilitar automatización | On/Off |
+| Temperatura Máxima | Temperatura máxima del agua | 20-40°C |
+| Barrido Máximo | Timeout de barrido (Análisis de Ventana) | 60-600s |
+| Intervalo de Consulta | Frecuencia de evaluación | 5-120min |
+| ΔT para encender | ΔT mínimo tras el barrido para calentar (default 2.0) | 0.5-6°C |
+| ΔT para apagar | Corte por histéresis (default 1.0) | 0.2-4°C |
+| Antiheladas | Circula 10 min cada 30 si el ambiente baja del umbral | On/Off |
+| Umbral antiheladas | Temperatura ambiente de activación (default 2°C) | -5-8°C |
+| Enfriamiento nocturno | Usa los colectores como radiador si la pileta superó la máxima | On/Off |
 
-### Diagnóstico (Categoría: Diagnóstico)
-| Entidad | Descripción | Valor |
-|---------|-------------|-------|
-| `sensor.solarpool_rl_phase` | Fase actual de entrenamiento | Traducido |
-| `sensor.solarpool_rl_episodes` | Total de ciclos aprendidos | Contador |
-| `sensor.solarpool_rl_epsilon` | Tasa de exploración | 0.05 a 0.30 |
-| `sensor.solarpool_rl_reward` | Recompensa del último ciclo | Eficiencia |
-| `button.solarpool_force_cycle` | Forzar evaluación inmediata | Acción |
+### Diagnóstico
+| Entidad | Descripción |
+|---------|-------------|
+| `sensor.solarpool_rl_phase` | Fase de aprendizaje |
+| `sensor.solarpool_rl_episodes` | Sesiones aprendidas |
+| `sensor.solarpool_rl_exploration_rate` | Tasa de exploración |
+| `sensor.solarpool_rl_last_reward` | Recompensa de la última sesión |
+| Botón "Forzar consulta" | Barrido inmediato |
 
-## 🧠 Innovaciones de la v2.1
+> Los IDs de las entidades nuevas dependen del idioma de tu Home Assistant al instalarlas.
 
-### ⚖️ Estabilidad mediante Análisis de Ventana (v2.1.2)
-El sistema ya no compara puntos aislados. Ahora utiliza un **Análisis de Ventana de Varianza**: acumula lecturas durante los primeros 60s y solo procede si la diferencia entre el máximo y el mínimo de la ventana es menor a **0.2°C**. Esto lo hace compatible con *cualquier* tipo de sensor, sin importar su frecuencia de refresco.
+### Eventos para automatizaciones
+- `solarpool_ai_session_ended`: al terminar de calentar (`gain`, `heating_minutes`, `pump_minutes`, `daily_gain`).
+- `solarpool_ai_problem`: al detectar un problema (`problem`, `message`). Ideal para notificaciones.
 
-### 🛡️ Protección de Ciclo Corto (v2.1.1)
-Para proteger la vida útil de la bomba, se implementa un **Tiempo Mínimo de Ejecución de 10 minutos** (Sweep + Heating). Si el agente RL decide apagar pero la bomba lleva menos tiempo, el sistema mantendrá la operación hasta cumplir el mínimo de seguridad.
+## 🧠 Cómo Decide
 
-## 🧠 Cómo Funciona el RL
+### 1. ¿Barro ahora? (agente RL, cada 10 min)
+Barrer (prender la bomba unos minutos para medir el agua del techo) cuesta energía. El agente aprende, según las condiciones, si suele valer la pena:
+- **Estado** (108 combinaciones): UV efectivo (4) × viento (3) × elevación solar (3) × hora respecto del mediodía solar (3)
+- **Acciones**: `WAIT` o `SWEEP`
+- **Recompensa** al terminar la sesión: `ganancia_real_°C − 0.05 × horas_de_bomba`, o `−0.1` si el barrido no terminó calentando
+- Si pasan más de 60 min sin barrer, barre igual (para no quedar ciego). Si la bomba ya está prendida por el filtrado, siempre mide (es gratis).
 
-### Estados (144 combinaciones)
-El agente discretiza las condiciones en:
-- **Delta T** (retorno - piscina): 4 niveles (0-2, 2-4, 4-6, 6+°C)
-- **UV Index**: 4 niveles (0-3, 3-6, 6-9, 9+)
-- **Viento**: 3 niveles (0-15, 15-30, 30+ km/h)
-- **Elevación Solar**: 3 niveles (0-20, 20-45, 45+°)
+| Fase | Sesiones | Comportamiento |
+|------|----------|----------------|
+| **Bootstrap** | 1-10 | Siempre barre |
+| **Entrenamiento** | 11-50 | Exploración decreciente (30% → 5%) |
+| **Producción** | 50+ | 5% exploración |
 
-### Acciones (5 opciones)
-| Acción | Descripción |
-|--------|-------------|
-| OFF | Bomba apagada |
-| ON 20min | Calentamiento corto |
-| ON 40min | Calentamiento medio |
-| ON 60min | Calentamiento largo |
-| ON 90min | Calentamiento máximo |
-
-### Recompensas
-```
-recompensa = ganancia_real_°C - (costo_bomba × horas)
-```
-- Decisiones eficientes → recompensas positivas
-- Decisiones ineficientes → recompensas negativas
-
-### Fases de Aprendizaje
-
-| Fase | Episodios | Comportamiento |
-|------|-----------|----------------|
-| **Bootstrap** | 1-10 | Reglas conservadoras (delta>4°C, UV>5) |
-| **Training** | 11-50 | 30% exploración, 70% explotación |
-| **Production** | 50+ | 5% exploración, 95% explotación |
+### 2. ¿Caliento? (control por ΔT)
+- **Barrido con Análisis de Ventana**: acumula lecturas del retorno y continúa cuando la variación es < 0.2°C (o al llegar al timeout).
+- Si `ΔT ≥ ΔT para encender` → calienta **sin duración fija**.
+- Cada 60 s mide de nuevo (mediana de 3 lecturas) y corta tras 3 lecturas seguidas bajo `ΔT para apagar`, al llegar a la temperatura máxima o al bajar el sol.
+- **Tiempo mínimo de bomba** de 10 min para no castigarla con arranques cortos.
 
 ## 🌍 Ejemplos de Explicaciones
 
@@ -185,24 +179,28 @@ recompensa = ganancia_real_°C - (costo_bomba × horas)
 🤖 Testing new strategy. I'll report back.
 ```
 
-## � Ciclo de Operación
+## 🔄 Ciclo de Operación
 
 ```mermaid
 stateDiagram-v2
     [*] --> Idle: Amanecer
-    Idle --> Sweeping: Timer/Forzar
-    Sweeping --> Measuring: Barrido completo
-    Measuring --> Consulting: Datos listos
-    Consulting --> Heating: Decisión ON
-    Consulting --> Idle: Decisión OFF
-    Heating --> Idle: Ciclo completado
-    Idle --> [*]: Atardecer
+    Idle --> Waiting: RL = esperar
+    Waiting --> Sweeping: próximo tick
+    Idle --> Sweeping: RL = barrer / Boost / Forzar
+    Sweeping --> Heating: ΔT ≥ umbral
+    Sweeping --> Idle: ΔT bajo
+    Heating --> Idle: ΔT < corte · máx · atardecer
+    Idle --> Frost: ambiente < umbral (antiheladas)
+    Idle --> Cooling: noche y pileta > máx (enfriamiento)
+    Frost --> Idle
+    Cooling --> Idle
 ```
 
 ## 📋 Historial de Versiones
 
 | Versión | Cambios principales |
 |---------|---------------------|
+| **0.1.0** | 🔥 **Motor v2**: calentamiento por ΔT con histéresis + RL que aprende cuándo barrer (se corrigió la atribución de recompensas; el aprendizaje se reinicia). 🎛️ Modos Auto/Boost/Vacaciones. ❄️ Antiheladas y 🌙 enfriamiento nocturno. 🚨 Sensor de problemas y eventos. 🐛 Fixes: el slider de temperatura máxima ahora funciona, la bomba no queda prendida tras un reinicio, recargar la integración no duplica ciclos, se pueden borrar los sensores opcionales. 💾 Estado en `.storage` (ya no en la config entry). |
 | **0.0.10** | 🎨 **Ícono propio**: La integración incluye su ícono en `brand/` (PNG transparente); Home Assistant 2026.3+ lo muestra automáticamente. |
 | **0.0.9** | 🐛 **Bugfix**: La integración quedaba en "No cargado" en versiones recientes de Home Assistant (`TypeError: expected str, got list`). Los textos propios se movieron de `translations/` a `messages/`. |
 | **0.0.8** | 🐛 **Bugfix**: El estado del switch Master se mantiene después de reiniciar Home Assistant. |

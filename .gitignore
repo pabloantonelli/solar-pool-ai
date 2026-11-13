@@ -22,3 +22,7 @@ venv.bak/
 .idea/
 test_ai.py
 submit_brand.sh
+
+# Tests
+.venv-test/
+.pytest_cache/

@@ -56,5 +56,46 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "delta_t": {
+        "name": "ΔT coletores"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problema"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Modo",
+        "state": {
+          "auto": "Automático",
+          "boost": "Boost (aquecer ao máximo)",
+          "vacation": "Férias"
+        }
+      }
+    },
+    "switch": {
+      "night_cooling": {
+        "name": "Resfriamento noturno"
+      },
+      "frost_protection": {
+        "name": "Anticongelamento"
+      }
+    },
+    "number": {
+      "delta_on": {
+        "name": "ΔT para ligar"
+      },
+      "delta_off": {
+        "name": "ΔT para desligar"
+      },
+      "frost_threshold": {
+        "name": "Limite anticongelamento"
+      }
+    }
   }
 }

@@ -56,5 +56,46 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "delta_t": {
+        "name": "Kollektor-ΔT"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Modus",
+        "state": {
+          "auto": "Automatisch",
+          "boost": "Boost (volle Heizleistung)",
+          "vacation": "Urlaub"
+        }
+      }
+    },
+    "switch": {
+      "night_cooling": {
+        "name": "Nachtkühlung"
+      },
+      "frost_protection": {
+        "name": "Frostschutz"
+      }
+    },
+    "number": {
+      "delta_on": {
+        "name": "ΔT zum Einschalten"
+      },
+      "delta_off": {
+        "name": "ΔT zum Ausschalten"
+      },
+      "frost_threshold": {
+        "name": "Frostschutz-Schwelle"
+      }
+    }
   }
 }

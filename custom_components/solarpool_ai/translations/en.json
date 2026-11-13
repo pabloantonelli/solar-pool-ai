@@ -56,5 +56,46 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "delta_t": {
+        "name": "Collector ΔT"
+      }
+    },
+    "binary_sensor": {
+      "problem": {
+        "name": "Problem"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Automatic",
+          "boost": "Boost (heat at full)",
+          "vacation": "Vacation"
+        }
+      }
+    },
+    "switch": {
+      "night_cooling": {
+        "name": "Night cooling"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
+      }
+    },
+    "number": {
+      "delta_on": {
+        "name": "ΔT to start"
+      },
+      "delta_off": {
+        "name": "ΔT to stop"
+      },
+      "frost_threshold": {
+        "name": "Frost threshold"
+      }
+    }
   }
 }

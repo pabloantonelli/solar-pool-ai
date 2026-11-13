@@ -7,7 +7,10 @@
       "consulting": "Consultation",
       "heating": "Chauffage",
       "cooldown": "Refroidissement",
-      "error": "Erreur"
+      "error": "Erreur",
+      "waiting": "En attente",
+      "cooling": "Refroidissement (nuit)",
+      "frost": "Hors-gel"
     },
     "rl_phases": {
       "bootstrap": "Amorçage (Règles Sûres)",
@@ -23,10 +26,19 @@
       "sweep_starting": "Démarrage du balayage pour la lecture des capteurs...",
       "sweep_forced": "Démarrage du balayage forcé...",
       "measuring_sensors": "Prise de mesures des capteurs...",
-      "consulting_ai": "Consultation de l'IA pour la décision thermique...",
       "sensor_error": "Erreur lors de la collecte des données des capteurs",
       "heating_complete": "Cycle de chauffage terminé",
-      "safety_override": "[Override] Delta réel ({delta:.1f}°C) insuffisant (<2.0°C)"
+      "resumed_heating": "Reprise du chauffage après redémarrage",
+      "master_off": "Automatisation désactivée (Master éteint)",
+      "mode_vacation": "Mode vacances : pas de chauffage (protections actives)",
+      "heating_stopped_delta": "ΔT tombé à {delta:.1f}°C (< {delta_off:.1f}°C). Fin du chauffage",
+      "pump_protect": "(Protection de la pompe : arrêt dans {minutes} min)",
+      "pump_external_off": "La pompe a été arrêtée de l'extérieur. Reprise au prochain cycle",
+      "frost_active": "❄️ Hors-gel : ambiance {temp:.1f}°C, circulation de l'eau",
+      "frost_pause": "❄️ Hors-gel en pause ({temp:.1f}°C), prochaine circulation dans 20 min",
+      "frost_complete": "Risque de gel écarté",
+      "cooling_active": "🌙 Refroidissement nocturne : piscine {temp:.1f}°C > max {max_temp:.1f}°C",
+      "cooling_complete": "Refroidissement nocturne terminé"
     },
     "templates": {
       "on_optimal": [
@@ -57,9 +69,9 @@
         "☁️ Ciel couvert. Mieux vaut attendre que ça se dégage."
       ],
       "off_delta": [
-        "📉 Seulement {delta:.1f}°C de différence. Il faut au moins 2°C.",
-        "🌡️ Delta T trop bas ({delta:.1f}°C). Pas rentable d'allumer.",
-        "📉 L'eau du toit est à peine plus chaude. Ça n'en vaut pas la peine."
+        "📉 Seulement {delta:.1f}°C de différence. Il faut au moins {delta_on:.1f}°C.",
+        "🌡️ Delta T trop faible ({delta:.1f}°C). Pas rentable.",
+        "📉 L'eau du toit est à peine plus chaude. Pas la peine."
       ],
       "off_low_sun": [
         "🌅 Soleil trop bas ({elevation:.0f}°). Rayonnement insuffisant.",
@@ -73,7 +85,19 @@
       "warmup": [
         "🏋️ Système en phase d'apprentissage. Utilisation de règles sûres.",
         "📚 Apprentissage des modèles. Décision conservatrice pour l'instant."
+      ],
+      "wait": [
+        "⏳ Conditions faibles (UV {uv}, vent {wind:.0f}km/h). J'attends pour économiser la pompe.",
+        "⏳ Par ce temps, un balayage rapporte rarement. Prochain cycle.",
+        "⏳ Gain attendu faible ({gain:.1f}°C/h). Balayage évité."
       ]
+    },
+    "problems": {
+      "pool_sensor_unavailable": "Capteur de température de la piscine indisponible depuis plus de 15 min",
+      "return_sensor_unavailable": "Capteur de température de retour indisponible depuis plus de 15 min",
+      "pump_not_responding": "La pompe n'a pas répondu à la dernière commande",
+      "return_sensor_stuck": "Le capteur de retour ne varie pas pompe en marche (capteur bloqué ou air dans le circuit ?)",
+      "collectors_low_yield": "Les capteurs solaires rendent peu en plein soleil (vanne fermée, air ou saleté ?)"
     }
   }
 }

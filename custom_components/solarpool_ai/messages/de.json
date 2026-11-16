@@ -30,7 +30,7 @@
       "heating_complete": "Heizzyklus abgeschlossen",
       "resumed_heating": "Heizen nach Neustart fortgesetzt",
       "master_off": "Automatisierung deaktiviert (Master aus)",
-      "mode_vacation": "Urlaubsmodus: kein Heizen (Schutzfunktionen aktiv)",
+      "mode_vacation": "Pause: kein Heizen (Schutzfunktionen aktiv)",
       "heating_stopped_delta": "ΔT auf {delta:.1f}°C gefallen (< {delta_off:.1f}°C). Heizen beendet",
       "pump_protect": "(Pumpenschutz: Abschaltung in {minutes} Min)",
       "pump_external_off": "Pumpe wurde extern ausgeschaltet. Weiter im nächsten Zyklus",

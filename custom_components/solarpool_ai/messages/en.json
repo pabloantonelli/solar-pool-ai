@@ -30,7 +30,7 @@
       "heating_complete": "Heating cycle completed",
       "resumed_heating": "Resuming heating after restart",
       "master_off": "Automation disabled (Master off)",
-      "mode_vacation": "Vacation mode: not heating (protections active)",
+      "mode_vacation": "Paused: not heating (protections active)",
       "heating_stopped_delta": "ΔT dropped to {delta:.1f}°C (< {delta_off:.1f}°C). Heating finished",
       "pump_protect": "(Protecting pump: turning off in {minutes} min)",
       "pump_external_off": "Pump was turned off externally. Resuming next cycle",

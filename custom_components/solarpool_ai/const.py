@@ -17,7 +17,7 @@ CONF_AMBIENT_TEMP_SENSOR_ID: Final = "ambient_temp_sensor_id"
 CONF_CLOUD_COVERAGE_SENSOR_ID: Final = "cloud_coverage_sensor_id"
 CONF_SWEEP_DURATION: Final = "sweep_duration"
 CONF_MAX_TEMP: Final = "max_temp"
-CONF_SCAN_INTERVAL: Final = "scan_interval"
+CONF_SCAN_INTERVAL: Final = "scan_interval"  # legacy (<= v0.1.0); el intervalo ahora es fijo
 CONF_LANGUAGE: Final = "language"
 # v0.1.0: control por ΔT y protecciones (viven en entry.options)
 CONF_DELTA_ON: Final = "delta_on"
@@ -35,7 +35,7 @@ LEGACY_DATA_KEYS: Final = ("q_table", "rl_episode_count", "cycle_history", "api_
 # ---------------------------------------------------------------------------
 DEFAULT_SWEEP_DURATION: Final = 180  # s
 DEFAULT_MAX_TEMP: Final = 32.0
-DEFAULT_SCAN_INTERVAL: Final = 10  # min
+CYCLE_INTERVAL_MINUTES: Final = 10  # tick lento fijo; el agente RL decide si vale la pena barrer
 DEFAULT_MIN_RUN_TIME: Final = 10  # Minutos mínimos de bomba encendida (barrido + calentamiento)
 DEFAULT_DELTA_ON: Final = 2.0  # ΔT mínimo tras el barrido para empezar a calentar
 DEFAULT_DELTA_OFF: Final = 1.0  # ΔT por debajo del cual se corta el calentamiento (histéresis)
@@ -96,9 +96,13 @@ ACTIVE_PUMP_STATES: Final = (STATE_SWEEPING, STATE_MEASURING, STATE_HEATING, STA
 # Modes (select)
 # ---------------------------------------------------------------------------
 MODE_AUTO: Final = "auto"
+MODE_ECO: Final = "eco"
 MODE_BOOST: Final = "boost"
-MODE_VACATION: Final = "vacation"
-MODES: Final = [MODE_AUTO, MODE_BOOST, MODE_VACATION]
+MODE_VACATION: Final = "vacation"  # se muestra como "Pausa (solo protecciones)"
+MODES: Final = [MODE_AUTO, MODE_ECO, MODE_BOOST, MODE_VACATION]
+# Eco: exige más ΔT para encender y corta antes (menos horas de bomba)
+ECO_DELTA_ON_EXTRA: Final = 1.5
+ECO_DELTA_OFF_EXTRA: Final = 0.5
 
 # ---------------------------------------------------------------------------
 # Language

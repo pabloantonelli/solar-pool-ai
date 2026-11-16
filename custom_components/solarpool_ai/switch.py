@@ -9,11 +9,10 @@ from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_FROST_PROTECTION, CONF_NIGHT_COOLING, DOMAIN
 from .coordinator import SolarPoolCoordinator
-from .entity import SolarPoolEntity, solarpool_device_info
+from .entity import SolarPoolEntity
 
 
 async def async_setup_entry(
@@ -32,17 +31,14 @@ async def async_setup_entry(
     )
 
 
-class SolarPoolMasterSwitch(CoordinatorEntity[SolarPoolCoordinator], SwitchEntity, RestoreEntity):
+class SolarPoolMasterSwitch(SolarPoolEntity, SwitchEntity, RestoreEntity):
     """Interruptor general: apaga toda la automatización (incluidas las protecciones)."""
 
-    _attr_name = "SolarPool Master"
     _attr_icon = "mdi:pool-thermometer"
 
     def __init__(self, coordinator: SolarPoolCoordinator) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.entry.entry_id}_master"
-        self._attr_device_info = solarpool_device_info(coordinator.entry.entry_id)
+        super().__init__(coordinator, "master")
 
     async def async_added_to_hass(self) -> None:
         """Restaura el estado previo al reinicio."""

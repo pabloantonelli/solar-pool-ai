@@ -30,7 +30,7 @@
       "heating_complete": "Ciclo de calentamiento completado",
       "resumed_heating": "Retomando calentamiento después del reinicio",
       "master_off": "Automatización desactivada (Master apagado)",
-      "mode_vacation": "Modo vacaciones: sin calentar (protecciones activas)",
+      "mode_vacation": "Pausa: sin calentar (protecciones activas)",
       "heating_stopped_delta": "ΔT bajó a {delta:.1f}°C (< {delta_off:.1f}°C). Fin del calentamiento",
       "pump_protect": "(Protegiendo bomba: se apaga en {minutes} min)",
       "pump_external_off": "La bomba se apagó desde afuera. Se retoma en el próximo ciclo",

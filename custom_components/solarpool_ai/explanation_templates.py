@@ -71,7 +71,3 @@ class ExplanationEngine:
     def get_problem_text(self, key: str) -> str:
         """Descripción traducida de un problema (problems.<key>)."""
         return get_text(f"problems.{key}", self.language)
-
-    def get_state_name(self, state: str) -> str:
-        """Nombre traducido de un estado."""
-        return get_text(f"states.{state}", self.language)

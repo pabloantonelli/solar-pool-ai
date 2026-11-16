@@ -1,4 +1,4 @@
-# SolarPool AI (Home Assistant Custom Component)
+# SolarPool AI ☀️🏊
 
 <p align="center">
   <img alt="SolarPool AI Icon" src="https://raw.githubusercontent.com/pabloantonelli/solar-pool-ai/main/custom_components/solarpool_ai/brand/icon@2x.png" width="128">
@@ -7,200 +7,135 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/v/release/pabloantonelli/solar-pool-ai)](https://github.com/pabloantonelli/solar-pool-ai/releases)
 
-SolarPool AI es una integración para Home Assistant que automatiza la climatización de piscinas con colectores solares. Calienta midiendo el **ΔT real de los colectores** y usa **aprendizaje por refuerzo local** para saber cuándo vale la pena prender la bomba a medir. Sin APIs externas.
+**Calentá tu pileta con el sol, sin pensar en la bomba.**
 
-## 🚀 Características
+Si tenés colectores solares en el techo, SolarPool AI decide por vos cuándo prender la bomba para que el agua pase por el techo y vuelva más caliente. Y cuándo apagarla, para no gastar luz de más. Funciona dentro de Home Assistant, sin internet y sin costos.
 
-- **🧠 Reinforcement Learning Local**: Aprende de tu sistema específico sin depender de APIs externas
-- **⏱️ Monitoreo de Alta Frecuencia**: Ciclos cada 10 min para una respuesta inmediata a cambios de clima
-- **⚖️ Análisis de Ventana (Estabilidad)**: Algoritmo de varianza que asegura lecturas térmicas reales en cualquier sensor
-- **🛡️ Protección de Bomba**: Tiempo mínimo de ejecución (10 min) para evitar arranques frecuentes
-- **🌍 Políglota Regional**: Soporte para Español (Arg/Esp), Inglés, Portugués (Br), Francés y Alemán
-- **📡 Sensores Opcionales**: Mapea sensores específicos de UV, viento o temperatura ambiente (v0.0.6)
-- **☀️ Estimación Inteligente de UV**: Calcula UV automáticamente basándose en la elevación solar si no hay datos (v0.0.6)
-- **🎨 UI Limpia**: Entidades categorizadas en Principal, Configuración y Diagnóstico
-- **💰 Cero Costos**: Sin gastos en APIs de IA (anteriormente $6-60/mes)
-- **⚡ Respuestas Instantáneas**: Decisiones en microsegundos vs 1-3 segundos con LLMs
-- **🔒 100% Offline**: Funciona sin conexión a internet
-- **🔥 Control por ΔT con histéresis (v0.1.0)**: calienta mientras el agua vuelve del techo al menos `ΔT para apagar` más caliente; sin duraciones fijas
-- **🎛️ Modos (v0.1.0)**: Automático, Boost (calentar a full hasta el atardecer) y Vacaciones
-- **❄️ Antiheladas y 🌙 Enfriamiento nocturno (v0.1.0)**: protecciones opcionales que usan los colectores
-- **🚨 Detección de problemas (v0.1.0)**: sensores caídos, bomba que no responde, retorno trabado o colectores rindiendo poco
-- **🛡️ Seguridad Multicapa**:
-  - La bomba es compartida con el filtrado: SolarPool nunca apaga una bomba que no prendió
-  - Si Home Assistant se reinicia mientras calienta, retoma o apaga la bomba (no queda prendida)
-  - Tiempo mínimo de bomba (10 min) y corte por temperatura máxima
-  - Apagado automático al atardecer
+---
 
-## 🏗️ Arquitectura
+## ✨ Qué hace por vos
 
-```mermaid
-flowchart LR
-    subgraph Sensores
-        P[🌡️ Temp Piscina]
-        R[🌡️ Temp Retorno]
-        W[🌤️ Clima / UV / Viento]
-    end
+- ☀️ **Aprovecha cada rato de sol.** Prende la bomba solo cuando el techo realmente está calentando el agua.
+- 💡 **Ahorra luz.** Apaga en cuanto el agua deja de volver caliente (nubes, viento, atardecer).
+- 🧠 **Aprende de tu casa.** Con los días se da cuenta de en qué condiciones conviene y en cuáles no vale la pena ni probar.
+- 🤝 **Respeta tu filtrado.** Si la bomba ya estaba prendida filtrando, nunca la apaga.
+- 🌡️ **No se pasa de temperatura.** Corta al llegar a la temperatura máxima que elijas.
+- ❄️ **Cuida la instalación en invierno** (opcional). Hace circular el agua cuando hay riesgo de helada.
+- 🌙 **Enfría la pileta de noche** (opcional). Si en verano se pasó de temperatura, usa el techo como radiador.
+- 🚨 **Te avisa si algo anda mal.** Por ejemplo, un sensor que dejó de responder o colectores que rinden poco.
+- 🗣️ **Te explica qué está haciendo**, en criollo: *"☀️ Sol fuerte y viento calmo. ¡Aprovechamos al máximo!"*
 
-    subgraph "Agente RL (cada 10 min)"
-        D[Estado: UV × viento × sol × hora]
-        Q[¿Vale la pena barrer?]
-    end
+## 🔄 Cómo funciona (en simple)
 
-    subgraph "Control por ΔT (cada 60 s)"
-        S[Barrido]
-        H[Calentar mientras ΔT ≥ umbral]
-    end
+1. **Cada 10 minutos, de día**, se pregunta si vale la pena revisar el techo, mirando el sol, las nubes y el viento.
+2. **Si vale la pena, mide.** Prende la bomba un par de minutos y compara el agua que vuelve del techo con la de la pileta.
+3. **Si vuelve más caliente, sigue calentando** y controla cada minuto. Cuando la diferencia se achica, apaga.
+4. **Aprende del resultado.** Si medir en esas condiciones sirvió, la próxima vez lo hace igual; si no sirvió, la próxima vez se ahorra la medición.
 
-    W --> D --> Q -->|SWEEP| S
-    P --> S
-    R --> S --> H
-    H -->|ganancia real| RW[📊 Recompensa] --> Q
+> La bomba nunca queda menos de 10 minutos encendida, para no castigarla con arranques cortos.
+
+---
+
+## 🛠️ Instalación
+
+1. En Home Assistant abrí **HACS** → menú ⋮ → **Repositorios personalizados**
+2. Pegá `https://github.com/pabloantonelli/solar-pool-ai` y elegí **Integración**
+3. Buscá **SolarPool AI**, instalala y reiniciá Home Assistant
+4. Andá a **Ajustes → Dispositivos y servicios → Añadir integración → SolarPool AI**
+
+### Qué te va a pedir
+| Necesitás | Para qué |
+|---|---|
+| 🔌 El **switch de la bomba** | Prenderla y apagarla |
+| 🌡️ Un **sensor de temperatura de la pileta** | Saber cuánto calienta |
+| 🌡️ Un **sensor de temperatura del retorno** (el caño que vuelve del techo) | Saber si el techo está calentando |
+| 🌤️ Una **entidad de clima** (la que ya tengas) | Sol, nubes, viento y temperatura exterior |
+| *(Opcional)* sensores de UV, nubes, viento o temperatura exterior | Más precisión si tenés estación meteorológica |
+
+---
+
+## 🎛️ Modos
+
+Elegilos desde el selector **Modo**:
+
+| Modo | Cuándo usarlo |
+|---|---|
+| **Automático** | El de todos los días. Calienta cuando rinde. |
+| **Eco (ahorro)** | Solo calienta con condiciones muy buenas. Gasta menos luz y calienta un poco menos. |
+| **Boost (calentar a full)** | Para cuando querés la pileta lo más caliente posible ese día (por ejemplo, viene gente mañana). Al atardecer vuelve solo a Automático. |
+| **Pausa (solo protecciones)** | Vacaciones o temporada sin uso. No calienta, pero si activaste el antiheladas o el enfriamiento nocturno, siguen funcionando. |
+
+El interruptor **Automatización** apaga todo, incluidas las protecciones.
+
+## ⚙️ Ajustes
+
+Están en la tarjeta del dispositivo, en **Configuración**. Los valores por defecto andan bien para la mayoría.
+
+| Ajuste | Qué hace | ¿Cuándo tocarlo? |
+|---|---|---|
+| **Temperatura máxima** | Deja de calentar al llegar a esta temperatura | A gusto (por defecto 32 °C) |
+| **ΔT para encender** | Cuánto más caliente tiene que volver el agua del techo para empezar a calentar | Subilo si sentís que prende "por poco" (por defecto 2 °C) |
+| **ΔT para apagar** | Si la diferencia baja de esto, apaga | Subilo para ahorrar más, bajalo para exprimir más el sol (por defecto 1 °C) |
+| **Duración máxima de medición** | Cuánto tiempo, como máximo, deja la bomba prendida para medir | Si tus caños al techo son largos y el agua caliente tarda en llegar, subilo (por defecto 3 min) |
+| **Antiheladas** + **Umbral** | Hace circular el agua 10 min cada media hora si afuera baja del umbral | Activalo si en tu zona hiela |
+| **Enfriamiento nocturno** | De noche, si la pileta se pasó de la máxima, la enfría usando el techo | Activalo si en verano se te calienta de más |
+
+## 📊 Qué vas a ver
+
+- **Estado**: qué está haciendo ahora (En reposo, Midiendo el techo, Calentando, Antiheladas…)
+- **Razonamiento**: el porqué, en una frase
+- **ΔT colectores**: cuánto más caliente vuelve el agua del techo
+- **Ganancia del día**: cuántos grados subió la pileta hoy
+- **Problema**: se enciende si algo anda mal. Adentro dice qué pasa.
+- **Medir ahora**: botón para que revise el techo en el momento
+- En **Diagnóstico** vas a encontrar cómo viene el aprendizaje (sesiones aprendidas, fase, etc.)
+
+### 📱 Recibir un aviso en el celular si hay un problema
+
+```yaml
+alias: "Aviso de problema en la pileta"
+triggers:
+  - trigger: event
+    event_type: solarpool_ai_problem
+actions:
+  - action: notify.notify
+    data:
+      title: "🏊 Pileta"
+      message: "{{ trigger.event.data.message }}"
 ```
 
-> Detalle técnico completo en [`CLAUDE.md`](CLAUDE.md).
+> También existe el evento `solarpool_ai_session_ended` (cuando termina de calentar, con los grados ganados), por si querés armar un resumen.
 
-## 🛠️ Instalación mediante HACS
+---
 
-1. Abre **HACS** en tu instancia de Home Assistant
-2. Ve a **Integraciones**
-3. Haz clic en los tres puntos → **Repositorios personalizados**
-4. Pega: `https://github.com/pabloantonelli/solar-pool-ai`
-5. Selecciona **Integración** y haz clic en **Añadir**
-6. Busca "SolarPool AI" e instálala
-7. Reinicia Home Assistant
+## ❓ Preguntas frecuentes
 
-## ⚙️ Configuración
+**¿Me va a apagar la bomba mientras filtra?**
+No. Solo apaga la bomba si la prendió él. Si ya estaba prendida, la aprovecha para medir gratis y la deja como estaba.
 
-Ve a **Ajustes** > **Dispositivos y Servicios** > **Añadir Integración** > **SolarPool AI**
+**¿Por qué prende la bomba un par de minutos y la apaga?**
+Estaba midiendo el techo. Con la bomba apagada, el agua del caño está quieta y no dice nada; hay que hacerla circular para saber si el techo está caliente. Si no convenía, apaga (después del mínimo de 10 min). Con el tiempo aprende a hacer menos mediciones inútiles.
 
-Necesitarás configurar:
+**¿Qué pasa si se reinicia Home Assistant mientras calienta?**
+Al volver retoma el calentamiento si sigue habiendo sol, o apaga la bomba. Nunca queda prendida "huérfana".
 
-### Entidades Requeridas
-- **Bomba de piscina** (switch)
-- **Sensor de temperatura piscina**
-- **Sensor de temperatura retorno** (de colectores)
-- **Entidad de clima** (weather)
+**¿Si apago la bomba a mano, se pelea conmigo?**
+No. Se da cuenta, suelta la bomba y recién vuelve a evaluar en el próximo ciclo.
 
-### Sensores Opcionales (v0.0.6)
-Podés mapear sensores específicos en vez de usar los atributos del clima:
-- **Sensor UV** - Por ejemplo: `sensor.pirateweather_uv_index`
-- **Sensor de viento** - Por ejemplo: `sensor.estacion_meteo_wind_speed`
-- **Sensor de temperatura ambiente**
+**¿Necesita internet o una cuenta de IA?**
+No. Todo corre dentro de tu Home Assistant.
 
-> 💡 **Prioridad de lectura UV**: Sensor configurado → Atributo weather → Estimación automática por elevación solar
+**Algunas entidades aparecen en inglés**
+Los nombres siguen el idioma del servidor de Home Assistant (*Ajustes → Sistema → General*). Los mensajes del Razonamiento usan el idioma que elegiste al configurar la integración.
 
-### Parámetros
-- **Idioma**: Español (Argentina/España), English, Português, Français o Deutsch
-- **Barrido máximo**: Timeout para estabilización de lecturas
-- **Temperatura máxima**: Límite donde se detiene el calentamiento
-- **Intervalo de consulta**: Frecuencia de evaluación
+---
 
-> ⚠️ **No requiere API Keys** - El sistema aprende localmente usando Reinforcement Learning
-
-## 📊 Entidades Expuestas
-
-### Operación (Principales)
-| Entidad | Descripción |
-|---------|-------------|
-| `sensor.solarpool_status` | Estado actual traducido (atributos: modo, última sesión, umbrales) |
-| `sensor.solarpool_reasoning` | **Explicación narrativa** de la decisión actual |
-| `sensor.solarpool_total_daily_gain` | **Ganancia acumulada hoy** (°C) |
-| `sensor.solarpool_ai_collector_dt` / `..._dt_colectores` | **ΔT colectores** (retorno − pileta) medido con la bomba en marcha |
-| `sensor.solarpool_next_run` | Próxima evaluación automática |
-| `sensor.solarpool_expected_gain` | Ganancia esperada por hora de calentamiento (aprendida) |
-| `select.solarpool_ai_modo` | Modo: Automático / Boost / Vacaciones |
-| `binary_sensor.solarpool_ai_problema` | ON si hay un problema (atributo `reasons` con el detalle) |
-| `switch.solarpool_master` | Habilitar/Deshabilitar toda la automatización (incluye protecciones) |
-
-### Parámetros (Categoría: Configuración)
-| Entidad | Descripción | Rango |
-|---------|-------------|-------|
-| Temperatura Máxima | Temperatura máxima del agua | 20-40°C |
-| Barrido Máximo | Timeout de barrido (Análisis de Ventana) | 60-600s |
-| Intervalo de Consulta | Frecuencia de evaluación | 5-120min |
-| ΔT para encender | ΔT mínimo tras el barrido para calentar (default 2.0) | 0.5-6°C |
-| ΔT para apagar | Corte por histéresis (default 1.0) | 0.2-4°C |
-| Antiheladas | Circula 10 min cada 30 si el ambiente baja del umbral | On/Off |
-| Umbral antiheladas | Temperatura ambiente de activación (default 2°C) | -5-8°C |
-| Enfriamiento nocturno | Usa los colectores como radiador si la pileta superó la máxima | On/Off |
-
-### Diagnóstico
-| Entidad | Descripción |
-|---------|-------------|
-| `sensor.solarpool_rl_phase` | Fase de aprendizaje |
-| `sensor.solarpool_rl_episodes` | Sesiones aprendidas |
-| `sensor.solarpool_rl_exploration_rate` | Tasa de exploración |
-| `sensor.solarpool_rl_last_reward` | Recompensa de la última sesión |
-| Botón "Forzar consulta" | Barrido inmediato |
-
-> Los IDs de las entidades nuevas dependen del idioma de tu Home Assistant al instalarlas.
-
-### Eventos para automatizaciones
-- `solarpool_ai_session_ended`: al terminar de calentar (`gain`, `heating_minutes`, `pump_minutes`, `daily_gain`).
-- `solarpool_ai_problem`: al detectar un problema (`problem`, `message`). Ideal para notificaciones.
-
-## 🧠 Cómo Decide
-
-### 1. ¿Barro ahora? (agente RL, cada 10 min)
-Barrer (prender la bomba unos minutos para medir el agua del techo) cuesta energía. El agente aprende, según las condiciones, si suele valer la pena:
-- **Estado** (108 combinaciones): UV efectivo (4) × viento (3) × elevación solar (3) × hora respecto del mediodía solar (3)
-- **Acciones**: `WAIT` o `SWEEP`
-- **Recompensa** al terminar la sesión: `ganancia_real_°C − 0.05 × horas_de_bomba`, o `−0.1` si el barrido no terminó calentando
-- Si pasan más de 60 min sin barrer, barre igual (para no quedar ciego). Si la bomba ya está prendida por el filtrado, siempre mide (es gratis).
-
-| Fase | Sesiones | Comportamiento |
-|------|----------|----------------|
-| **Bootstrap** | 1-10 | Siempre barre |
-| **Entrenamiento** | 11-50 | Exploración decreciente (30% → 5%) |
-| **Producción** | 50+ | 5% exploración |
-
-### 2. ¿Caliento? (control por ΔT)
-- **Barrido con Análisis de Ventana**: acumula lecturas del retorno y continúa cuando la variación es < 0.2°C (o al llegar al timeout).
-- Si `ΔT ≥ ΔT para encender` → calienta **sin duración fija**.
-- Cada 60 s mide de nuevo (mediana de 3 lecturas) y corta tras 3 lecturas seguidas bajo `ΔT para apagar`, al llegar a la temperatura máxima o al bajar el sol.
-- **Tiempo mínimo de bomba** de 10 min para no castigarla con arranques cortos.
-
-## 🌍 Ejemplos de Explicaciones
-
-### Español 🇪🇸
-```
-☀️ Sol fuerte y viento calmo. ¡Aprovechamos al máximo!
-💨 Viento de 25km/h enfría los colectores.
-📉 Solo 1.5°C de diferencia. Necesitamos al menos 2°C.
-🤖 Probando nueva estrategia. Después te cuento cómo salió.
-```
-
-### English 🇬🇧
-```
-☀️ Strong sun, calm wind. Let's heat up!
-💨 25km/h wind cools the collectors.
-📉 Only 1.5°C difference. Need at least 2°C.
-🤖 Testing new strategy. I'll report back.
-```
-
-## 🔄 Ciclo de Operación
-
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: Amanecer
-    Idle --> Waiting: RL = esperar
-    Waiting --> Sweeping: próximo tick
-    Idle --> Sweeping: RL = barrer / Boost / Forzar
-    Sweeping --> Heating: ΔT ≥ umbral
-    Sweeping --> Idle: ΔT bajo
-    Heating --> Idle: ΔT < corte · máx · atardecer
-    Idle --> Frost: ambiente < umbral (antiheladas)
-    Idle --> Cooling: noche y pileta > máx (enfriamiento)
-    Frost --> Idle
-    Cooling --> Idle
-```
-
-## 📋 Historial de Versiones
+## 📋 Historial de versiones
 
 | Versión | Cambios principales |
 |---------|---------------------|
-| **0.1.0** | 🔥 **Motor v2**: calentamiento por ΔT con histéresis + RL que aprende cuándo barrer (se corrigió la atribución de recompensas; el aprendizaje se reinicia). 🎛️ Modos Auto/Boost/Vacaciones. ❄️ Antiheladas y 🌙 enfriamiento nocturno. 🚨 Sensor de problemas y eventos. 🐛 Fixes: el slider de temperatura máxima ahora funciona, la bomba no queda prendida tras un reinicio, recargar la integración no duplica ciclos, se pueden borrar los sensores opcionales. 💾 Estado en `.storage` (ya no en la config entry). |
+| **0.2.0** | 🎛️ Nuevo modo **Eco**; "Vacaciones" ahora se llama **Pausa (solo protecciones)**. 🌍 Todas las entidades traducidas. ⏱️ El intervalo de consulta pasa a ser automático (cada 10 min). 📖 README más simple. |
+| **0.1.0** | 🔥 Calienta midiendo la temperatura real del agua que vuelve del techo, y aprende cuándo vale la pena medir (el aprendizaje arranca de cero). 🎛️ Modos Automático, Boost y Vacaciones. ❄️ Antiheladas y 🌙 enfriamiento nocturno. 🚨 Aviso de problemas. 🐛 Arreglos: el slider de temperatura máxima ahora funciona, la bomba no queda prendida tras reiniciar y recargar la integración no duplica ciclos. |
 | **0.0.10** | 🎨 **Ícono propio**: La integración incluye su ícono en `brand/` (PNG transparente); Home Assistant 2026.3+ lo muestra automáticamente. |
 | **0.0.9** | 🐛 **Bugfix**: La integración quedaba en "No cargado" en versiones recientes de Home Assistant (`TypeError: expected str, got list`). Los textos propios se movieron de `translations/` a `messages/`. |
 | **0.0.8** | 🐛 **Bugfix**: El estado del switch Master se mantiene después de reiniciar Home Assistant. |
@@ -212,6 +147,7 @@ stateDiagram-v2
 | **0.0.2** | 🛡️ Protección de bomba compartida (no apaga si ya estaba filtrando) y disparo inmediato al activar Master. |
 | **0.0.1** | 🚀 Lanzamiento inicial BETA: Reinforcement Learning Local, Análisis de Ventana, Multilenguaje Regional y UI Optimizada. |
 
+
 ---
 
-**Nota**: Este componente utiliza Reinforcement Learning local. No requiere conexión a internet ni APIs externas para funcionar.
+🔧 ¿Querés saber cómo funciona por dentro? Mirá [`CLAUDE.md`](CLAUDE.md) (documentación técnica).

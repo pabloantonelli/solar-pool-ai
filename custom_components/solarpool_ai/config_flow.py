@@ -24,13 +24,11 @@ from .const import (
     CONF_CLOUD_COVERAGE_SENSOR_ID,
     CONF_SWEEP_DURATION,
     CONF_MAX_TEMP,
-    CONF_SCAN_INTERVAL,
     CONF_LANGUAGE,
     SUPPORTED_LANGUAGES,
     DEFAULT_LANGUAGE,
     DEFAULT_SWEEP_DURATION,
     DEFAULT_MAX_TEMP,
-    DEFAULT_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,11 +137,6 @@ class SolarPoolConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             min=20, max=40, step=0.5, unit_of_measurement="°C", mode=selector.NumberSelectorMode.BOX
                         )
                     ),
-                    vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=5, max=120, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
-                        )
-                    ),
                 }
             ),
         )
@@ -190,10 +183,6 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
                 CONF_MAX_TEMP,
                 self.config_entry.data.get(CONF_MAX_TEMP, DEFAULT_MAX_TEMP)
             )
-            scan_interval = self.config_entry.options.get(
-                CONF_SCAN_INTERVAL,
-                self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            )
             
             # Get optional sensor overrides
             uv_sensor = self.config_entry.options.get(
@@ -216,7 +205,6 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
             # Ensure values are valid
             sweep_duration = int(sweep_duration) if sweep_duration else DEFAULT_SWEEP_DURATION
             max_temp = float(max_temp) if max_temp else DEFAULT_MAX_TEMP
-            scan_interval = int(scan_interval) if scan_interval else DEFAULT_SCAN_INTERVAL
 
             # Build language options for selector
             language_map = {
@@ -257,14 +245,6 @@ class SolarPoolOptionsFlow(config_entries.OptionsFlow):
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=20, max=40, step=0.5, unit_of_measurement="°C", mode=selector.NumberSelectorMode.BOX
-                    )
-                ),
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=scan_interval,
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=5, max=120, step=1, unit_of_measurement="min", mode=selector.NumberSelectorMode.BOX
                     )
                 ),
             }

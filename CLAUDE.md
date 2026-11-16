@@ -20,7 +20,7 @@ Todo es local: no usa APIs externas ni dependencias (`requirements: []`, sin num
 
 ## Flujo de control (v0.1.0)
 ```
-tick lento (cada scan_interval, default 10 min)          tick rápido (cada 60 s, siempre)
+tick lento (cada 10 min fijo, CYCLE_INTERVAL_MINUTES)   tick rápido (cada 60 s, siempre)
   ├─ si estado ∈ ACTIVE_PUMP_STATES → no hace nada         ├─ problemas (sensores caídos, bomba que no responde)
   ├─ prerequisitos: sol ≥ 5°, pileta < max_temp            ├─ HEATING → _async_check_heating (ΔT con histéresis)
   ├─ modo vacaciones → IDLE                                ├─ antiheladas (_async_handle_frost)
@@ -49,12 +49,13 @@ tick lento (cada scan_interval, default 10 min)          tick rápido (cada 60 s
 | Dato | Dónde |
 |---|---|
 | Entidades (bomba, sensores, weather) | `entry.data` (alta) |
-| Parámetros (max_temp, sweep, intervalo, idioma, sensores opcionales, delta_on/off, antiheladas, enfriamiento) | `entry.options` (options flow, entidades number/switch). **Leer siempre con `coordinator._conf(key, default)`** (options → data → default; un `None` explícito en options = borrado). |
+| Parámetros (max_temp, sweep, idioma, sensores opcionales, delta_on/off, antiheladas, enfriamiento) | `entry.options` (options flow, entidades number/switch). **Leer siempre con `coordinator._conf(key, default)`** (options → data → default; un `None` explícito en options = borrado). |
 | RL (Q 108×2, counts, gain_rate, episodios), historial (50 sesiones), sesión en curso, pump_owned, modo, seguimiento diario, last_sweep | `Store` → `.storage/solarpool_ai.<entry_id>` (`async_delay_save`, 5 s) |
 | Switch Master | `RestoreEntity` |
 
 El options flow **mergea** con las options existentes, para no pisar lo que escriben los numbers y switches.
-Los cambios de options llegan por `update_listener` → `coordinator.async_options_updated()` (intervalo e idioma, sin recargar).
+Los cambios de options llegan por `update_listener` → `coordinator.async_options_updated()` (solo el idioma necesita reaplicarse; el resto se lee con `_conf` en cada uso).
+Desde v0.2.0 el intervalo es fijo (10 min): `scan_interval` quedó como clave legacy y `_async_remove_obsolete_entities` (en `__init__.py`) borra su entidad number del registro.
 
 ## Contexto climático (`_gather_context`)
 - UV: sensor → atributo `uv_index` del weather → estimación `12·sin(elevación)`. Un 0 real es válido.
@@ -64,7 +65,7 @@ Los cambios de options llegan por `update_listener` → `coordinator.async_optio
 - Estado RL = UV(4) × viento(3) × elevación(3) × hora solar(3). ΔT no entra, porque no se conoce antes de barrer.
 
 ## Modos y protecciones
-- `select mode`: `auto` | `boost` (barre en cada tick; vuelve a auto al atardecer, en `_on_night`) | `vacation` (no calienta; las protecciones siguen activas).
+- `select mode`: `auto` | `eco` (delta_on +1.5, delta_off +0.5; ver las properties `delta_on`/`delta_off`) | `boost` (barre en cada tick; vuelve a auto al atardecer, en `_on_night`) | `vacation` (en la UI se llama "Pausa (solo protecciones)"; no calienta, las protecciones siguen activas).
 - Switch Master OFF = apagado total, incluidas las protecciones.
 - Antiheladas (switch config, OFF por defecto): si el ambiente baja de `frost_threshold`, circula 10 min cada 30. Sale con umbral + 1 °C.
 - Enfriamiento nocturno (switch config, OFF por defecto): de noche, si la pileta supera máx + 1 y el ambiente está por debajo de pileta − 3, circula en bloques de 30 min hasta que la pileta llega a ≤ máx.
@@ -73,7 +74,7 @@ Los cambios de options llegan por `update_listener` → `coordinator.async_optio
 
 ## Gotchas
 - **`translations/` lo valida HA**: solo puede tener `config`, `options` y `entity`. Nada de listas ni claves propias, porque si no la integración no carga (bug de la v0.0.9). Los textos propios van en `messages/`.
-- Las entidades originales tienen nombres fijos (`_attr_name`) para no cambiar los entity_id de instalaciones existentes. Las nuevas usan `translation_key`, así que hay que agregarlas en `translations/*.json` → `entity`, en los 5 idiomas.
+- **Todas** las entidades usan `SolarPoolEntity` (`has_entity_name` + `translation_key` = key del unique_id). Los nombres van en `translations/*.json` → `entity`, en los 5 idiomas. Los unique_id no cambian desde v0.0.x, así que los entity_id existentes se conservan. Los nombres siguen el idioma del servidor de HA. Los sensores Estado y Fase son `ENUM` (el valor es el código, por ejemplo `heating`, y HA lo traduce). Los textos de `reasoning` usan el idioma elegido en la integración (`messages/`).
 - Ícono: `brand/icon.png` + `icon@2x.png` (HA 2026.3+).
 - Para agregar un texto visible: tiene que ir en los 5 idiomas (`es`, `en`, `pt-BR`, `fr`, `de`). `es-ar` y `es-es` usan `es.json`.
 - `daily_gain` se actualiza solo con lecturas tomadas con la bomba en marcha (con la bomba apagada, el sensor in-line no es confiable).

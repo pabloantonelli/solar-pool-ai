@@ -15,7 +15,6 @@ from custom_components.solarpool_ai.const import (
     CONF_POOL_SENSOR_ID,
     CONF_PUMP_ENTITY_ID,
     CONF_RETURN_SENSOR_ID,
-    CONF_SCAN_INTERVAL,
     CONF_SWEEP_DURATION,
     CONF_WEATHER_ENTITY_ID,
     DOMAIN,
@@ -35,7 +34,6 @@ BASE_DATA = {
     CONF_WEATHER_ENTITY_ID: WEATHER,
     CONF_SWEEP_DURATION: 180,
     CONF_MAX_TEMP: 32.0,
-    CONF_SCAN_INTERVAL: 10,
     "language": "es-ar",
 }
 

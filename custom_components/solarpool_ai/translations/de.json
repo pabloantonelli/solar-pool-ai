@@ -27,8 +27,7 @@
         "data": {
           "language": "Sprache",
           "sweep_duration": "Maximale Spüldauer",
-          "max_temp": "Maximale Pooltemperatur",
-          "scan_interval": "Zyklusintervall"
+          "max_temp": "Maximale Pooltemperatur"
         }
       }
     }
@@ -42,7 +41,6 @@
           "language": "Sprache",
           "sweep_duration": "Maximale Spüldauer",
           "max_temp": "Maximale Pooltemperatur",
-          "scan_interval": "Zyklusintervall",
           "uv_sensor_id": "UV-Index-Sensor (optional)",
           "cloud_coverage_sensor_id": "Wolkenbedeckungs-Sensor (optional)",
           "wind_sensor_id": "Windgeschwindigkeits-Sensor (optional)",
@@ -59,8 +57,51 @@
   },
   "entity": {
     "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Ruhe",
+          "waiting": "Wartend",
+          "sweeping": "Dach wird gemessen",
+          "measuring": "Messung",
+          "heating": "Heizen",
+          "cooldown": "Maximaltemperatur erreicht",
+          "cooling": "Nachtkühlung",
+          "frost": "Frostschutz",
+          "error": "Fehler"
+        }
+      },
+      "reasoning": {
+        "name": "Begründung"
+      },
+      "expected_gain": {
+        "name": "Erwarteter Gewinn (1 h)"
+      },
+      "next_run": {
+        "name": "Nächste Auswertung"
+      },
+      "daily_gain": {
+        "name": "Tagesgewinn"
+      },
       "delta_t": {
         "name": "Kollektor-ΔT"
+      },
+      "rl_episodes": {
+        "name": "Gelernte Sitzungen"
+      },
+      "rl_phase": {
+        "name": "Lernphase",
+        "state": {
+          "bootstrap": "Anfang (sichere Regeln)",
+          "training": "Lernend",
+          "production": "Optimiert"
+        }
+      },
+      "rl_epsilon": {
+        "name": "Erkundungsrate"
+      },
+      "rl_reward": {
+        "name": "Letzte Belohnung"
       }
     },
     "binary_sensor": {
@@ -73,12 +114,16 @@
         "name": "Modus",
         "state": {
           "auto": "Automatisch",
+          "eco": "Eco (sparsam)",
           "boost": "Boost (volle Heizleistung)",
-          "vacation": "Urlaub"
+          "vacation": "Pause (nur Schutz)"
         }
       }
     },
     "switch": {
+      "master": {
+        "name": "Automatisierung"
+      },
       "night_cooling": {
         "name": "Nachtkühlung"
       },
@@ -87,6 +132,12 @@
       }
     },
     "number": {
+      "max_temp": {
+        "name": "Maximaltemperatur"
+      },
+      "sweep_duration": {
+        "name": "Maximale Messdauer"
+      },
       "delta_on": {
         "name": "ΔT zum Einschalten"
       },
@@ -95,6 +146,11 @@
       },
       "frost_threshold": {
         "name": "Frostschutz-Schwelle"
+      }
+    },
+    "button": {
+      "force_cycle": {
+        "name": "Jetzt messen"
       }
     }
   }

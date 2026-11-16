@@ -30,7 +30,7 @@
       "heating_complete": "Cycle de chauffage terminé",
       "resumed_heating": "Reprise du chauffage après redémarrage",
       "master_off": "Automatisation désactivée (Master éteint)",
-      "mode_vacation": "Mode vacances : pas de chauffage (protections actives)",
+      "mode_vacation": "Pause : pas de chauffage (protections actives)",
       "heating_stopped_delta": "ΔT tombé à {delta:.1f}°C (< {delta_off:.1f}°C). Fin du chauffage",
       "pump_protect": "(Protection de la pompe : arrêt dans {minutes} min)",
       "pump_external_off": "La pompe a été arrêtée de l'extérieur. Reprise au prochain cycle",

@@ -8,7 +8,6 @@ from custom_components.solarpool_ai.const import (
     CONF_DELTA_ON,
     CONF_LANGUAGE,
     CONF_MAX_TEMP,
-    CONF_SCAN_INTERVAL,
     CONF_SWEEP_DURATION,
     CONF_UV_SENSOR_ID,
 )
@@ -26,7 +25,7 @@ async def test_options_flow_keeps_entity_values_and_clears_sensors(hass: HomeAss
     assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_LANGUAGE: "en", CONF_SWEEP_DURATION: 120, CONF_MAX_TEMP: 30, CONF_SCAN_INTERVAL: 15},
+        user_input={CONF_LANGUAGE: "en", CONF_SWEEP_DURATION: 120, CONF_MAX_TEMP: 30},
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -34,6 +33,5 @@ async def test_options_flow_keeps_entity_values_and_clears_sensors(hass: HomeAss
     assert entry.options[CONF_UV_SENSOR_ID] is None  # borrado por el usuario
 
     coord = hass.data["solarpool_ai"][entry.entry_id]
-    assert coord.cycle_interval_minutes == 15
     assert coord.explanation_engine.language == "en"
     assert coord.max_temp == 30

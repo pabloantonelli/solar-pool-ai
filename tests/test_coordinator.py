@@ -14,6 +14,7 @@ from custom_components.solarpool_ai.const import (
     CONF_NIGHT_COOLING,
     DOMAIN,
     MODE_BOOST,
+    MODE_ECO,
     MODE_VACATION,
     PROBLEM_POOL_SENSOR,
     STATE_COOLDOWN,
@@ -279,3 +280,45 @@ async def test_entities_created(hass: HomeAssistant, pump_calls) -> None:
     for key in ("status", "reasoning", "delta_t", "problem", "mode", "master", "night_cooling",
                 "frost_protection", "delta_on", "delta_off", "frost_threshold", "max_temp", "force_cycle"):
         assert f"test_entry_{key}" in ids, key
+    assert "test_entry_scan_interval" not in ids
+
+    # Todas las entidades tienen nombre traducido (ninguna queda sin nombre)
+    for entity in registry.entities.values():
+        if entity.platform == DOMAIN:
+            assert entity.translation_key, entity.entity_id
+            state = hass.states.get(entity.entity_id)
+            assert state is not None and state.name and "None" not in state.name, entity.entity_id
+
+    status = hass.states.get(registry.async_get_entity_id("sensor", DOMAIN, "test_entry_status"))
+    assert status.state == STATE_IDLE  # enum: HA lo traduce en la UI
+
+
+async def test_obsolete_interval_entity_removed(hass: HomeAssistant, pump_calls) -> None:
+    set_night(hass)
+    set_world(hass)
+    registry = er.async_get(hass)
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from .conftest import BASE_DATA
+    entry = MockConfigEntry(domain=DOMAIN, data=BASE_DATA, version=1, minor_version=2, entry_id="test_entry")
+    entry.add_to_hass(hass)
+    registry.async_get_or_create("number", DOMAIN, "test_entry_scan_interval", config_entry=entry)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert registry.async_get_entity_id("number", DOMAIN, "test_entry_scan_interval") is None
+
+
+async def test_eco_mode_raises_thresholds(hass: HomeAssistant, pump_calls, advance) -> None:
+    set_day(hass)
+    set_world(hass, pool=25, ret=25)
+    entry = await setup_entry(hass)
+    coord = coordinator_of(hass, entry)
+    assert (coord.delta_on, coord.delta_off) == (2.0, 1.0)
+    await coord.async_set_mode(MODE_ECO)
+    assert (coord.delta_on, coord.delta_off) == (3.5, 1.5)
+
+    # ΔT 3 °C: en Automático calentaría, en Eco no
+    await advance(15)
+    hass.states.async_set(RETURN, "28")
+    await advance(75)
+    assert coord.state == STATE_IDLE
+    assert coord.last_session["outcome"] == "low_delta"

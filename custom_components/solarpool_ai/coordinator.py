@@ -59,7 +59,6 @@ from .const import (
     CONF_POOL_SENSOR_ID,
     CONF_PUMP_ENTITY_ID,
     CONF_RETURN_SENSOR_ID,
-    CONF_SCAN_INTERVAL,
     CONF_SWEEP_DURATION,
     CONF_UV_SENSOR_ID,
     CONF_WEATHER_ENTITY_ID,
@@ -70,7 +69,9 @@ from .const import (
     DEFAULT_LANGUAGE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_RUN_TIME,
-    DEFAULT_SCAN_INTERVAL,
+    CYCLE_INTERVAL_MINUTES,
+    ECO_DELTA_OFF_EXTRA,
+    ECO_DELTA_ON_EXTRA,
     DEFAULT_SWEEP_DURATION,
     DELTA_MEDIAN_WINDOW,
     DELTA_OFF_CONSECUTIVE,
@@ -87,6 +88,7 @@ from .const import (
     MIN_SUN_ELEVATION,
     MODE_AUTO,
     MODE_BOOST,
+    MODE_ECO,
     MODE_VACATION,
     MODES,
     PROBLEM_LOW_YIELD,
@@ -156,7 +158,7 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self._language = self._conf(CONF_LANGUAGE, DEFAULT_LANGUAGE)
         self.explanation_engine = ExplanationEngine(self._language)
-        self.cycle_interval_minutes = int(self._conf(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+        self.cycle_interval_minutes = CYCLE_INTERVAL_MINUTES
         self.reasoning = self.explanation_engine.get_status_message("waiting_ha")
 
         # ---- Bomba (ownership: la bomba también filtra; solo apagamos lo que prendimos)
@@ -207,13 +209,17 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @property
     def delta_on(self) -> float:
-        """ΔT mínimo para empezar a calentar."""
-        return float(self._conf(CONF_DELTA_ON, DEFAULT_DELTA_ON))
+        """ΔT mínimo para empezar a calentar (más exigente en modo Eco)."""
+        base = float(self._conf(CONF_DELTA_ON, DEFAULT_DELTA_ON))
+        return base + ECO_DELTA_ON_EXTRA if self.mode == MODE_ECO else base
 
     @property
     def delta_off(self) -> float:
-        """ΔT de corte (siempre al menos MIN_DELTA_GAP por debajo de delta_on)."""
-        return min(float(self._conf(CONF_DELTA_OFF, DEFAULT_DELTA_OFF)), self.delta_on - MIN_DELTA_GAP)
+        """ΔT de corte (más alto en Eco; siempre al menos MIN_DELTA_GAP por debajo de delta_on)."""
+        base = float(self._conf(CONF_DELTA_OFF, DEFAULT_DELTA_OFF))
+        if self.mode == MODE_ECO:
+            base += ECO_DELTA_OFF_EXTRA
+        return min(base, self.delta_on - MIN_DELTA_GAP)
 
     @property
     def session_active(self) -> bool:
@@ -355,19 +361,8 @@ class SolarPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.next_cycle_time = dt_util.utcnow() + timedelta(minutes=self.cycle_interval_minutes)
 
     @callback
-    def async_update_interval(self, minutes: int) -> None:
-        """Cambia el intervalo del tick lento (solo si cambió)."""
-        minutes = int(minutes)
-        if minutes == self.cycle_interval_minutes and self._unsub_interval:
-            return
-        self.cycle_interval_minutes = minutes
-        self._setup_interval()
-        _LOGGER.info("SolarPool: intervalo actualizado a %s minutos", minutes)
-
-    @callback
     def async_options_updated(self) -> None:
-        """Aplica cambios de options (intervalo, idioma) sin recargar."""
-        self.async_update_interval(int(self._conf(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)))
+        """Aplica cambios de options (idioma) sin recargar; el resto se lee con _conf en cada uso."""
         language = self._conf(CONF_LANGUAGE, DEFAULT_LANGUAGE)
         if language != self._language:
             self._language = language

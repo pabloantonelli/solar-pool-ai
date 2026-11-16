@@ -27,8 +27,7 @@
         "data": {
           "language": "Idioma",
           "sweep_duration": "Duração Máxima de Varredura",
-          "max_temp": "Temperatura Máxima da Piscina",
-          "scan_interval": "Intervalo de Ciclos"
+          "max_temp": "Temperatura Máxima da Piscina"
         }
       }
     }
@@ -42,7 +41,6 @@
           "language": "Idioma",
           "sweep_duration": "Duração Máxima de Varredura",
           "max_temp": "Temperatura Máxima da Piscina",
-          "scan_interval": "Intervalo de Ciclos",
           "uv_sensor_id": "Sensor de Índice UV (opcional)",
           "cloud_coverage_sensor_id": "Sensor de Cobertura de Nuvens (opcional)",
           "wind_sensor_id": "Sensor de Velocidade do Vento (opcional)",
@@ -59,8 +57,51 @@
   },
   "entity": {
     "sensor": {
+      "status": {
+        "name": "Estado",
+        "state": {
+          "idle": "Em repouso",
+          "waiting": "Aguardando",
+          "sweeping": "Medindo o telhado",
+          "measuring": "Medindo",
+          "heating": "Aquecendo",
+          "cooldown": "Temperatura máxima atingida",
+          "cooling": "Resfriando (noite)",
+          "frost": "Anticongelamento",
+          "error": "Erro"
+        }
+      },
+      "reasoning": {
+        "name": "Raciocínio"
+      },
+      "expected_gain": {
+        "name": "Ganho esperado (1 h)"
+      },
+      "next_run": {
+        "name": "Próxima avaliação"
+      },
+      "daily_gain": {
+        "name": "Ganho do dia"
+      },
       "delta_t": {
         "name": "ΔT coletores"
+      },
+      "rl_episodes": {
+        "name": "Sessões aprendidas"
+      },
+      "rl_phase": {
+        "name": "Fase de aprendizado",
+        "state": {
+          "bootstrap": "Inicial (regras seguras)",
+          "training": "Aprendendo",
+          "production": "Otimizado"
+        }
+      },
+      "rl_epsilon": {
+        "name": "Taxa de exploração"
+      },
+      "rl_reward": {
+        "name": "Última recompensa"
       }
     },
     "binary_sensor": {
@@ -73,12 +114,16 @@
         "name": "Modo",
         "state": {
           "auto": "Automático",
+          "eco": "Eco (economia)",
           "boost": "Boost (aquecer ao máximo)",
-          "vacation": "Férias"
+          "vacation": "Pausa (só proteções)"
         }
       }
     },
     "switch": {
+      "master": {
+        "name": "Automação"
+      },
       "night_cooling": {
         "name": "Resfriamento noturno"
       },
@@ -87,6 +132,12 @@
       }
     },
     "number": {
+      "max_temp": {
+        "name": "Temperatura máxima"
+      },
+      "sweep_duration": {
+        "name": "Tempo máximo de medição"
+      },
       "delta_on": {
         "name": "ΔT para ligar"
       },
@@ -95,6 +146,11 @@
       },
       "frost_threshold": {
         "name": "Limite anticongelamento"
+      }
+    },
+    "button": {
+      "force_cycle": {
+        "name": "Medir agora"
       }
     }
   }

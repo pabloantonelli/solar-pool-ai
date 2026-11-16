@@ -30,7 +30,7 @@
       "heating_complete": "Ciclo de aquecimento concluído",
       "resumed_heating": "Retomando aquecimento após reinício",
       "master_off": "Automação desativada (Master desligado)",
-      "mode_vacation": "Modo férias: sem aquecer (proteções ativas)",
+      "mode_vacation": "Pausa: sem aquecer (proteções ativas)",
       "heating_stopped_delta": "ΔT caiu para {delta:.1f}°C (< {delta_off:.1f}°C). Fim do aquecimento",
       "pump_protect": "(Protegendo a bomba: desliga em {minutes} min)",
       "pump_external_off": "A bomba foi desligada externamente. Retomando no próximo ciclo",
